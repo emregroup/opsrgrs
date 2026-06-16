@@ -1,0 +1,25 @@
+{
+  "schema": "sea-users-v1",
+  "updatedAt": "2026-06-16T16:34:29Z",
+  "minCodeLength": 6,
+  "maxCodeLength": 8,
+  "note": "Starter defaults. Change these in the app before production if you use this file.",
+  "users": [
+    {
+      "id": "u_mgr",
+      "name": "Manager",
+      "role": "manager",
+      "status": "active",
+      "salt": "c8a06253f1ca1c3a4ff9a83b81e5483a",
+      "codeHash": "05f6944ae32af9b1a4466ad0930b17673f67bba757b19530a888823fe5e1528e"
+    },
+    {
+      "id": "u_assoc",
+      "name": "Associate",
+      "role": "associate",
+      "status": "active",
+      "salt": "17d8e41f058b53d454d16f34486c8bdb",
+      "codeHash": "b5af870cea6116f4289347f97fd38d1cc2317731e5777426cb4f4e958e11837d"
+    }
+  ]
+}

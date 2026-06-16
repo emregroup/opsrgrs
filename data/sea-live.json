@@ -1,0 +1,423 @@
+﻿{
+    "schema":  "sea-live-v1",
+    "sourceType":  "aloha-dbf-readonly",
+    "privacyMode":  true,
+    "employeePrivacy":  "alias",
+    "store":  "Bonchon Rogers",
+    "updatedAt":  "2026-06-16T18:39:16.2464612Z",
+    "date":  "2026-06-16",
+    "source":  {
+                   "dataFolder":  "C:\\BootDrv\\Aloha\\DATA",
+                   "salesFile":  "GNDITEM.dbf",
+                   "registerFile":  "GNDSALE.dbf",
+                   "revenueFile":  "GNDREVN.dbf",
+                   "tenderFile":  "GNDTNDR.dbf",
+                   "voidFile":  "GNDVOID.dbf",
+                   "itemMasterFile":  "ITM.DBF"
+               },
+    "sales":  [
+                  {
+                      "itemId":  "170911",
+                      "item":  "Mixed 4 Wings + 2 Drums",
+                      "qty":  6,
+                      "amount":  71.94
+                  },
+                  {
+                      "itemId":  "144157",
+                      "item":  "Seoul Sampler",
+                      "qty":  2,
+                      "amount":  67.98
+                  },
+                  {
+                      "itemId":  "171531",
+                      "item":  "K-Chicken Sandwich",
+                      "qty":  6,
+                      "amount":  65.94
+                  },
+                  {
+                      "itemId":  "171003",
+                      "item":  "Japchae",
+                      "qty":  4,
+                      "amount":  59.96
+                  },
+                  {
+                      "itemId":  "171004",
+                      "item":  "Chicken Katsu",
+                      "qty":  4,
+                      "amount":  55.96
+                  },
+                  {
+                      "itemId":  "970007",
+                      "item":  "3PD Fee",
+                      "qty":  12,
+                      "amount":  50.42
+                  },
+                  {
+                      "itemId":  "144145",
+                      "item":  "K-Meal 4-6 PPL",
+                      "qty":  1,
+                      "amount":  44.99
+                  },
+                  {
+                      "itemId":  "170916",
+                      "item":  "Mixed 6 Wings + 2 Drums",
+                      "qty":  2,
+                      "amount":  31.98
+                  },
+                  {
+                      "itemId":  "170005",
+                      "item":  "Wings 20",
+                      "qty":  1,
+                      "amount":  29.99
+                  },
+                  {
+                      "itemId":  "170103",
+                      "item":  "Pork Cheese Katsu Sand",
+                      "qty":  2,
+                      "amount":  29.98
+                  },
+                  {
+                      "itemId":  "174998",
+                      "item":  "Make it a Meal!",
+                      "qty":  6,
+                      "amount":  29.94
+                  },
+                  {
+                      "itemId":  "170403",
+                      "item":  "Strips 8",
+                      "qty":  2,
+                      "amount":  27.98
+                  },
+                  {
+                      "itemId":  "144143",
+                      "item":  "YumDrum Trio Meal",
+                      "qty":  2,
+                      "amount":  23.98
+                  },
+                  {
+                      "itemId":  "173009",
+                      "item":  "Korean Street Corn",
+                      "qty":  4,
+                      "amount":  19.96
+                  },
+                  {
+                      "itemId":  "171526",
+                      "item":  "Bulgogi",
+                      "qty":  1,
+                      "amount":  17.99
+                  },
+                  {
+                      "itemId":  "170402",
+                      "item":  "Strips 5",
+                      "qty":  2,
+                      "amount":  17.98
+                  },
+                  {
+                      "itemId":  "144166",
+                      "item":  "MoPo Corndog",
+                      "qty":  3,
+                      "amount":  17.97
+                  },
+                  {
+                      "itemId":  "170008",
+                      "item":  "Wings 10",
+                      "qty":  1,
+                      "amount":  16.99
+                  },
+                  {
+                      "itemId":  "173015",
+                      "item":  "Onion Rings",
+                      "qty":  2,
+                      "amount":  15.98
+                  },
+                  {
+                      "itemId":  "170104",
+                      "item":  "Pork Cheese Katsu Bowl",
+                      "qty":  1,
+                      "amount":  14.99
+                  },
+                  {
+                      "itemId":  "700001",
+                      "item":  "Fountain Soda-Unlimted",
+                      "qty":  5,
+                      "amount":  14.95
+                  },
+                  {
+                      "itemId":  "170202",
+                      "item":  "Drums 5",
+                      "qty":  1,
+                      "amount":  13.99
+                  },
+                  {
+                      "itemId":  "170606",
+                      "item":  "Boneless 10",
+                      "qty":  1,
+                      "amount":  13.99
+                  },
+                  {
+                      "itemId":  "174070",
+                      "item":  "Kimchi Pork Belly",
+                      "qty":  1,
+                      "amount":  12.99
+                  },
+                  {
+                      "itemId":  "174073",
+                      "item":  "Bulgogi",
+                      "qty":  1,
+                      "amount":  12.99
+                  },
+                  {
+                      "itemId":  "174003",
+                      "item":  "Chicken Spicy",
+                      "qty":  1,
+                      "amount":  11.99
+                  },
+                  {
+                      "itemId":  "115080",
+                      "item":  "Sotteok Sotteok",
+                      "qty":  4,
+                      "amount":  11.96
+                  },
+                  {
+                      "itemId":  "132467",
+                      "item":  "Pork Potstickers 8",
+                      "qty":  1,
+                      "amount":  9.99
+                  },
+                  {
+                      "itemId":  "132473",
+                      "item":  "Veg Potstickers 8",
+                      "qty":  1,
+                      "amount":  9.99
+                  },
+                  {
+                      "itemId":  "170002",
+                      "item":  "Wings 6",
+                      "qty":  1,
+                      "amount":  9.99
+                  },
+                  {
+                      "itemId":  "170102",
+                      "item":  "Korean Cucumber Salad",
+                      "qty":  2,
+                      "amount":  7.98
+                  },
+                  {
+                      "itemId":  "173518",
+                      "item":  "Sweet Potato Waffle Fries",
+                      "qty":  6,
+                      "amount":  7.1
+                  },
+                  {
+                      "itemId":  "175008",
+                      "item":  "Korean Donuts \u0026 Sauce (2)",
+                      "qty":  1,
+                      "amount":  6.99
+                  },
+                  {
+                      "itemId":  "105027",
+                      "item":  "Fried Zucchini",
+                      "qty":  1,
+                      "amount":  6.99
+                  },
+                  {
+                      "itemId":  "173506",
+                      "item":  "Seasoned Fries",
+                      "qty":  5,
+                      "amount":  6.65
+                  },
+                  {
+                      "itemId":  "173006",
+                      "item":  "Seasoned Fries",
+                      "qty":  1,
+                      "amount":  4.99
+                  },
+                  {
+                      "itemId":  "174651",
+                      "item":  "Spicy Mayo",
+                      "qty":  5,
+                      "amount":  4.95
+                  },
+                  {
+                      "itemId":  "174658",
+                      "item":  "Extra Bulgogi",
+                      "qty":  1,
+                      "amount":  4
+                  },
+                  {
+                      "itemId":  "127531",
+                      "item":  "Korean Donuts \u0026 Sauce (1)",
+                      "qty":  1,
+                      "amount":  3.99
+                  },
+                  {
+                      "itemId":  "174670",
+                      "item":  "Add Fried Egg",
+                      "qty":  4,
+                      "amount":  3.96
+                  },
+                  {
+                      "itemId":  "700085",
+                      "item":  "Water-Btl",
+                      "qty":  1,
+                      "amount":  2.99
+                  },
+                  {
+                      "itemId":  "173003",
+                      "item":  "Steamed Rice",
+                      "qty":  1,
+                      "amount":  2.99
+                  },
+                  {
+                      "itemId":  "144126",
+                      "item":  "Seasoned Fries (KM)",
+                      "qty":  1,
+                      "amount":  2
+                  },
+                  {
+                      "itemId":  "174653",
+                      "item":  "Ranch",
+                      "qty":  1,
+                      "amount":  0.99
+                  },
+                  {
+                      "itemId":  "970006",
+                      "item":  "Convenience Fee",
+                      "qty":  1,
+                      "amount":  0.99
+                  },
+                  {
+                      "itemId":  "171005",
+                      "item":  "House Fried Rice",
+                      "qty":  2,
+                      "amount":  0
+                  },
+                  {
+                      "itemId":  "172008",
+                      "item":  "Bao Buns",
+                      "qty":  1,
+                      "amount":  0
+                  },
+                  {
+                      "itemId":  "171522",
+                      "item":  "Bibimbap",
+                      "qty":  1,
+                      "amount":  0
+                  },
+                  {
+                      "itemId":  "173516",
+                      "item":  "No Fries",
+                      "qty":  1,
+                      "amount":  -2
+                  }
+              ],
+    "register":  [
+                     {
+                         "date":  "2026-06-16",
+                         "net":  900.3,
+                         "cash":  16.4,
+                         "credit":  970.4,
+                         "tax":  85.51,
+                         "totalTender":  986.8,
+                         "tips":  30.54,
+                         "comps":  0,
+                         "promos":  0,
+                         "voids":  2.99,
+                         "refunds":  0,
+                         "transactions":  142,
+                         "guests":  1017,
+                         "noSales":  0,
+                         "cashOverShort":  0,
+                         "tenders":  [
+                                         {
+                                             "typeId":  "11",
+                                             "name":  "Visa",
+                                             "amount":  263.24,
+                                             "tip":  19.71,
+                                             "count":  14
+                                         },
+                                         {
+                                             "typeId":  "18",
+                                             "name":  "Door Dash",
+                                             "amount":  222.89,
+                                             "tip":  0,
+                                             "count":  7
+                                         },
+                                         {
+                                             "typeId":  "25",
+                                             "name":  "Uber Eats",
+                                             "amount":  191.68,
+                                             "tip":  0,
+                                             "count":  5
+                                         },
+                                         {
+                                             "typeId":  "975",
+                                             "name":  "Online Pay",
+                                             "amount":  176.08,
+                                             "tip":  2,
+                                             "count":  4
+                                         },
+                                         {
+                                             "typeId":  "12",
+                                             "name":  "MasterCard",
+                                             "amount":  53.08,
+                                             "tip":  2.48,
+                                             "count":  3
+                                         },
+                                         {
+                                             "typeId":  "10",
+                                             "name":  "Amex",
+                                             "amount":  31.72,
+                                             "tip":  2,
+                                             "count":  1
+                                         },
+                                         {
+                                             "typeId":  "13",
+                                             "name":  "Discover",
+                                             "amount":  31.71,
+                                             "tip":  4.35,
+                                             "count":  2
+                                         },
+                                         {
+                                             "typeId":  "1",
+                                             "name":  "Cash",
+                                             "amount":  16.4,
+                                             "tip":  0,
+                                             "count":  1
+                                         }
+                                     ],
+                         "employees":  [
+                                           {
+                                               "name":  "Emp-3819A1",
+                                               "sales":  544.3,
+                                               "comps":  0,
+                                               "promos":  0,
+                                               "voids":  0,
+                                               "voidCount":  0,
+                                               "compCount":  0,
+                                               "noSales":  0,
+                                               "checks":  29
+                                           },
+                                           {
+                                               "name":  "Emp-8136B7",
+                                               "sales":  356,
+                                               "comps":  0,
+                                               "promos":  0,
+                                               "voids":  0,
+                                               "voidCount":  0,
+                                               "compCount":  0,
+                                               "noSales":  0,
+                                               "checks":  8
+                                           }
+                                       ]
+                     }
+                 ],
+    "dbf":  {
+                "gndItemRows":  392,
+                "gndSaleRows":  1119,
+                "gndTenderRows":  110,
+                "gndVoidRows":  null,
+                "menuItemsMapped":  9527
+            },
+    "message":  "Read-only Aloha DBF live data. No Aloha files were changed."
+}
