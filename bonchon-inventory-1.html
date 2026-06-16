@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141416">
+<script>
+  (function(){try{
+    var t=localStorage.getItem('ember_theme');
+    if(!t)t=(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+    document.documentElement.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#F7F5F3':'#141416';
+  }catch(e){}})();
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Bonchon Inventory</title>
+<style>
+  :root{
+    --base:#141416; --surface:#1D1D20; --surface2:#28282C; --line:#3A3A40;
+    --cream:#F5F3EF; --muted:#9C9CA4; --faint:#67676F;
+    --ember1:#ED1C24; --ember2:#B3131A;
+    --green:#3FB950; --amber:#E3A21E; --danger:#E87B6B;
+    --nav:rgba(18,18,20,.92);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    --display:"Nunito","Varela Round","Quicksand",-apple-system,"Segoe UI",system-ui,sans-serif;
+  }
+  :root[data-theme="light"]{
+    --base:#F7F5F3; --surface:#FFFFFF; --surface2:#F0EDE9; --line:#E4E0DB;
+    --cream:#1A1A1D; --muted:#6E6E76; --faint:#A2A2AA;
+    --ember1:#ED1C24; --ember2:#C00D14;
+    --green:#2E9E43; --amber:#B0790F; --danger:#C23A28;
+    --nav:rgba(255,255,255,.92);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--base);color:var(--cream);font-family:var(--sans);
+    font-size:16px;line-height:1.4;
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust:100%;
+    transition:background-color .28s ease,color .28s ease;
+  }
+  .card,.item,header,nav,.input,.btn.ghost,.iconbtn,.seg,.tt-track{transition:background-color .28s ease,border-color .28s ease,color .28s ease}
+  h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em}
+  button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+  input,select{font-family:inherit;font-size:16px}
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:20;background:var(--base);
+    padding:calc(14px + env(safe-area-inset-top)) 18px 12px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .wordmark{display:inline-flex;align-items:center;background:var(--ember1);color:#fff;
+    font-family:var(--display);font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    font-size:18px;line-height:1;padding:8px 12px;border-radius:9px;
+    box-shadow:0 2px 14px rgba(237,28,36,.38)}
+  .brand .sub{display:block;color:var(--muted);font-size:10px;letter-spacing:.22em;margin-top:5px;text-transform:uppercase}
+
+  /* Theme toggle */
+  .theme-toggle{background:none;padding:4px;flex:none;border-radius:30px}
+  .tt-track{position:relative;display:flex;align-items:center;width:62px;height:30px;border-radius:30px;
+    background:var(--surface2);border:1px solid var(--line)}
+  .tt-ico{flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;z-index:1;position:relative}
+  .tt-sun{color:var(--amber)}
+  .tt-moon{color:var(--muted)}
+  .tt-knob{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(135deg,var(--ember1),var(--ember2));
+    box-shadow:0 2px 7px rgba(0,0,0,.4);transform:translateX(32px);
+    transition:transform .32s cubic-bezier(.45,1.4,.5,1)}
+  :root[data-theme="light"] .tt-knob{transform:translateX(0)}
+  @media (prefers-reduced-motion:reduce){.tt-knob{transition:none}}
+
+  main{padding:18px 18px 40px;max-width:560px;margin:0 auto}
+  .view{display:none}
+  .view.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .view-title{font-family:var(--display);font-weight:800;font-size:25px;margin-bottom:4px}
+  .view-sub{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{justify-content:space-between}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* Order summary signature */
+  .ordersum{
+    border-radius:16px;padding:18px;margin-bottom:18px;position:relative;overflow:hidden;
+    background:radial-gradient(120% 100% at 0% 0%,rgba(237,28,36,.16),transparent 60%),var(--surface);
+    border:1px solid var(--line);
+  }
+  .ordersum::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(var(--ember1),var(--ember2))}
+  .ordersum .big{font-family:var(--mono);font-size:40px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .ordersum .biglabel{color:var(--muted);font-size:12px;letter-spacing:.06em;margin-top:6px}
+
+  /* Supplier order block */
+  .supplier-head{display:flex;align-items:center;gap:8px;margin:22px 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .supplier-head .dot{width:8px;height:8px;border-radius:50%}
+  .orderline{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .orderline:last-child{border-bottom:none}
+  .orderline .nm{flex:1;font-size:15px}
+  .orderline .meta{color:var(--faint);font-size:11.5px;font-family:var(--mono)}
+  .orderline .qty{font-family:var(--mono);font-size:17px;font-weight:700;text-align:right}
+  .orderline .qty small{display:block;color:var(--muted);font-size:10.5px;font-weight:400;letter-spacing:.04em}
+
+  .pill{font-size:10.5px;font-family:var(--mono);padding:2px 7px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
+  .pill.low{color:var(--amber);border-color:#5a4a1e;background:rgba(227,162,30,.08)}
+  .pill.ok{color:var(--green);border-color:#234a2a;background:rgba(63,185,80,.08)}
+
+  /* List items (menu / inventory) */
+  .item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:9px}
+  .item .title{font-size:15.5px;font-weight:600}
+  .item .desc{color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.45}
+  .item .desc b{color:var(--cream);font-weight:600}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:13px 16px;border-radius:11px;font-size:15px;font-weight:600;width:100%}
+  .btn.ember{background:linear-gradient(135deg,var(--ember1),var(--ember2));color:#fff;box-shadow:0 4px 18px rgba(237,28,36,.34)}
+  .btn.ghost{background:var(--surface2);border:1px solid var(--line);color:var(--cream)}
+  .btn.green{background:rgba(63,185,80,.14);border:1px solid #2c5a33;color:var(--green)}
+  .btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+  .btn.sm{padding:9px 12px;font-size:13px;width:auto}
+  .btn-row{display:flex;gap:9px}
+  .btn-row .btn{width:100%}
+
+  .iconbtn{width:34px;height:34px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;color:var(--muted)}
+
+  /* Forms */
+  label.fld{display:block;margin-bottom:13px}
+  label.fld span{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .input,select.input{width:100%;background:var(--base);border:1px solid var(--line);border-radius:10px;
+    padding:12px 13px;color:var(--cream)}
+  .input:focus,select.input:focus{outline:none;border-color:var(--ember1)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  textarea.input{min-height:120px;font-family:var(--mono);font-size:13px;resize:vertical}
+
+  /* recipe builder rows */
+  .reciperow{display:grid;grid-template-columns:1fr 70px 34px;gap:8px;margin-bottom:8px;align-items:center}
+
+  /* Sales entry rows */
+  .salesrow{display:grid;grid-template-columns:1fr 84px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .salesrow:last-of-type{border-bottom:none}
+  .salesrow .nm{font-size:15px}
+  .salesrow .sub{color:var(--faint);font-size:11px}
+  .qtyinput{width:100%;text-align:center;background:var(--base);border:1px solid var(--line);border-radius:9px;padding:10px 6px;color:var(--cream);font-family:var(--mono);font-size:16px}
+
+  .empty{text-align:center;color:var(--muted);padding:34px 16px}
+  .empty .ico{font-size:30px;opacity:.5;margin-bottom:8px}
+  .empty p{margin:6px 0 16px;font-size:14px}
+
+  .note{font-size:12px;color:var(--faint);line-height:1.5;margin-top:10px}
+  .divider{height:1px;background:var(--line);margin:20px 0}
+
+  /* Nav */
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--nav);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);
+    display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom));}
+  nav button{flex:1;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--faint);font-size:10px;letter-spacing:.04em;padding:5px 2px;border-radius:10px}
+  nav button .ni{font-size:19px;line-height:1}
+  nav button.active{color:var(--ember1)}
+  nav button{position:relative}
+  .navdot{position:absolute;top:3px;right:50%;margin-right:-16px;width:9px;height:9px;border-radius:50%;
+    background:var(--ember1);box-shadow:0 0 0 2px var(--base);display:none}
+
+  /* Register dashboard */
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+  .stat .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .stat .val{font-family:var(--mono);font-size:21px;font-weight:700;margin-top:3px}
+  .stat.wide{grid-column:1/3}
+  .delta{font-size:12px;font-family:var(--mono);margin-left:6px}
+  .delta.up{color:var(--green)} .delta.down{color:var(--ember1)}
+  .empbar{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .empbar:last-child{border-bottom:none}
+  .empbar .who{font-weight:600;font-size:14.5px;flex:1}
+  .empbar.flag .who{color:var(--ember1)}
+  .empbar .mini{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .alertcard{border:1px solid var(--ember1);background:rgba(237,28,36,.08)}
+  .ltab{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  .ltab th,.ltab td{text-align:right;padding:7px 4px;border-bottom:1px solid var(--line)}
+  .ltab th:first-child,.ltab td:first-child{text-align:left}
+  .ltab th{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .ltab td{font-family:var(--mono)}
+  .ltab tr.tot td{border-top:2px solid var(--line);border-bottom:none;font-weight:800;color:var(--ember1)}
+  .ltab td:first-child{font-family:inherit}
+
+  /* Modal / toast */
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:#1D1D20;color:#F5F3EF;padding:11px 18px;border-radius:30px;font-size:13.5px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:16px}
+  .seg button{flex:1;background:none;color:var(--muted);padding:9px;border-radius:8px;font-size:13px;font-weight:600}
+  .seg button.active{background:var(--surface2);color:var(--cream)}
+
+  .small-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 9px}
+  .subcat{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:10px 0 6px 2px;display:flex;align-items:center;gap:7px}
+  .subcat::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ember2);opacity:.7;flex:none}
+  .pricechip{font-family:var(--mono);font-size:11.5px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--ember1);cursor:pointer;white-space:nowrap}
+  .pricechip:active{transform:scale(.96)}
+  .supbadge{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:800;
+    text-transform:uppercase;letter-spacing:.05em;font-size:13.5px;color:#fff;line-height:1;
+    padding:6px 12px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.28)}
+  .supbadge.lg{font-size:15px;padding:8px 14px}
+  .supbadge::before{content:"";width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.9)}
+
+  /* Barcode scanner */
+  .scanner{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column}
+  .scan-top{display:flex;align-items:center;justify-content:space-between;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:rgba(0,0,0,.55);color:var(--cream)}
+  .scan-top .scan-title{font-size:15px;font-weight:600;letter-spacing:.04em}
+  .scan-top .iconbtn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:var(--cream)}
+  .scan-stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .scan-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .scan-frame{position:relative;width:76%;max-width:340px;aspect-ratio:1.5/1;border-radius:14px;
+    box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+  .scan-frame span{position:absolute;width:26px;height:26px;border:3px solid var(--ember1)}
+  .scan-frame span:nth-child(1){top:-2px;left:-2px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
+  .scan-frame span:nth-child(2){top:-2px;right:-2px;border-left:none;border-bottom:none;border-radius:0 14px 0 0}
+  .scan-frame span:nth-child(3){bottom:-2px;left:-2px;border-right:none;border-top:none;border-radius:0 0 0 14px}
+  .scan-frame span:nth-child(4){bottom:-2px;right:-2px;border-left:none;border-top:none;border-radius:0 0 14px 0}
+  .scan-frame::after{content:"";position:absolute;left:6%;right:6%;height:2px;
+    background:linear-gradient(90deg,transparent,var(--ember1),transparent);box-shadow:0 0 9px var(--ember1);
+    animation:scanline 2.2s ease-in-out infinite}
+  @keyframes scanline{0%,100%{top:16%}50%{top:84%}}
+  .scan-hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:var(--cream);
+    font-size:13px;padding:0 26px;text-shadow:0 1px 5px #000;line-height:1.45}
+  .scan-bottom{background:rgba(0,0,0,.55);padding:14px 16px calc(16px + env(safe-area-inset-bottom))}
+  .scan-manual{display:grid;grid-template-columns:1fr auto;gap:9px}
+  @media (prefers-reduced-motion:reduce){.scan-frame::after{animation:none;top:50%}}
+  #lockscreen{position:fixed;inset:0;z-index:9999;background:var(--base);display:flex;align-items:center;justify-content:center}
+  #lockscreen.hidden{display:none}
+  .lock-box{width:100%;max-width:300px;padding:24px;text-align:center}
+  .lock-word{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.06em;color:var(--ember1)}
+  .lock-sub{color:var(--muted);margin-top:6px;font-size:14px}
+  .lock-sub.err{color:var(--ember1);font-weight:700}
+  .lock-dots{display:flex;gap:14px;justify-content:center;margin:22px 0 26px}
+  .lock-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--line)}
+  .lock-dots span.on{background:var(--ember1);border-color:var(--ember1)}
+  .lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .lock-pad button{height:64px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+    color:var(--text);font-size:24px;font-family:var(--mono);cursor:pointer}
+  .lock-pad button:active{background:var(--ember1);color:#fff}
+  .lock-pad button.lk-blank{background:transparent;border-color:transparent;font-size:20px;color:var(--muted)}
+  .hdr-lock{background:transparent;border:none;font-size:18px;cursor:pointer;margin-right:6px;opacity:.7}
+  .hdr-lock:hover{opacity:1}
+</style>
+</head>
+<body>
+<div id="lockscreen">
+  <div class="lock-box">
+    <div class="lock-word">BONCHON</div>
+    <div class="lock-sub" id="lock-sub">Enter PIN</div>
+    <div class="lock-dots"><span></span><span></span><span></span><span></span></div>
+    <div class="lock-pad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button class="lk-blank" data-k="clear">✕</button><button data-k="0">0</button><button class="lk-blank" data-k="back">⌫</button>
+    </div>
+  </div>
+</div>
+<header>
+  <div class="brand">
+    <div>
+      <span class="wordmark">Bonchon</span>
+      <span class="sub">Inventory &amp; Ordering</span>
+    </div>
+  </div>
+  <button class="hdr-lock" id="hdr-lock" title="Lock app" aria-label="Lock app">🔒</button>
+  <button class="theme-toggle" id="theme-toggle" role="switch" aria-label="Switch between dark and light theme" title="Switch theme">
+    <span class="tt-track">
+      <span class="tt-ico tt-sun">☀</span>
+      <span class="tt-ico tt-moon">☾</span>
+      <span class="tt-knob"></span>
+    </span>
+  </button>
+</header>
+
+<main>
+  <!-- ORDER VIEW -->
+  <section class="view active" id="view-order">
+    <div class="eyebrow">This week's order sheet</div>
+    <h2 class="view-title">What to order</h2>
+    <div class="view-sub" id="order-window">Based on your sales averages</div>
+    <div id="order-body"></div>
+  </section>
+
+  <!-- REGISTER VIEW -->
+  <section class="view" id="view-register">
+    <div class="eyebrow">Sales &amp; register watch</div>
+    <h2 class="view-title">Register</h2>
+    <div class="view-sub">Live sales, this month vs last, and who's removing money from checks.</div>
+    <div id="register-body"></div>
+  </section>
+
+  <!-- SALES VIEW -->
+  <section class="view" id="view-sales">
+    <div class="eyebrow">Sales input</div>
+    <h2 class="view-title">Log your sales</h2>
+    <div class="view-sub">Sync from Aloha, enter counts by hand, or import a sales-mix export.</div>
+    <button class="btn ember" id="sales-sync" style="margin-bottom:14px">⟳ Sync today's sales from Aloha</button>
+    <div class="seg">
+      <button class="active" data-salesmode="enter">Enter counts</button>
+      <button data-salesmode="import">Import Aloha</button>
+    </div>
+    <div id="sales-enter"></div>
+    <div id="sales-import" style="display:none"></div>
+  </section>
+
+  <!-- MENU VIEW -->
+  <section class="view" id="view-menu">
+    <div class="eyebrow">Recipes</div>
+    <h2 class="view-title">Menu items</h2>
+    <div class="view-sub">What each dish uses. This is what turns sales into ordering needs.</div>
+    <div id="menu-list"></div>
+    <button class="btn ember" id="add-menu" style="margin-top:6px">＋ Add menu item</button>
+    <button class="btn ghost" id="import-menu" style="margin-top:9px">⤓ Import menu list (paste / Aloha)</button>
+    <button class="btn ghost" id="load-menu" style="margin-top:9px">⤓ Load my Bonchon menu (75 items)</button>
+    <button class="btn ghost" id="clear-menu" style="margin-top:9px;color:var(--ember1)">🗑 Clear all menu items</button>
+  </section>
+
+  <!-- INVENTORY VIEW -->
+  <section class="view" id="view-inv">
+    <div class="eyebrow">Stock items</div>
+    <h2 class="view-title">Inventory</h2>
+    <div class="view-sub">Everything you order — supplier, case size, and what's on hand.</div>
+    <div id="inv-list"></div>
+    <div class="btn-row" style="margin-top:6px">
+      <button class="btn ember" id="scan-inv">📷 Scan item</button>
+      <button class="btn ghost" id="add-inv">＋ Add manually</button>
+    </div>
+    <button class="btn ghost" id="import-inv" style="margin-top:9px">⤓ Import items from invoice</button>
+  </section>
+
+  <!-- DATA VIEW -->
+  <section class="view" id="view-data">
+    <div class="eyebrow">Settings &amp; data</div>
+    <h2 class="view-title">Setup</h2>
+    <div class="view-sub">Tune the math, back up your data, and install the app.</div>
+    <div id="data-body"></div>
+  </section>
+</main>
+
+<nav>
+  <button class="active" data-nav="order"><span class="ni">📋</span>Order</button>
+  <button data-nav="register"><span class="ni">💵</span>Register<span class="navdot" id="reg-dot"></span></button>
+  <button data-nav="sales"><span class="ni">📈</span>Sales</button>
+  <button data-nav="menu"><span class="ni">🍗</span>Menu</button>
+  <button data-nav="inv"><span class="ni">📦</span>Stock</button>
+  <button data-nav="data"><span class="ni">⚙️</span>Setup</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- Storage ---------- */
+const KEY="bonchon_inv_v2";
+const APP_VERSION="2026-06-15.1";
+const DEFAULTS={
+  settings:{cycleDays:7,safetyDays:2,suppliers:["Sysco","Performance (PFG)"],supplierInfo:{},syncUrl:"",syncAuto:false,syncDeduct:false,syncLast:"",alertVoids:6,alertCompPct:8,alertNoSales:5,laborTargetPct:28,laborWage:0,laborSPLH:0,pins:{associate:"1144",manager:"8800"},email:{method:"mailto",serviceId:"",templateId:"",publicKey:"",relayUrl:"",relayKey:"",fromName:"Bonchon Rogers",replyTo:"",cc:""}},
+  ingredients:[],
+  menu:[],
+  sales:[], // {date:'YYYY-MM-DD', counts:{menuId:qty}}
+  orders:[], // {id,batch,date,supplier,status,lines:[{name,code,cases,units,unit}]}
+  register:[] // {date,net,cash,credit,comps,promos,voids,employees:[{name,sales,comps,promos,voids,voidCount,compCount}]}
+};
+let S=load();
+
+function load(){
+  try{const r=localStorage.getItem(KEY);if(r)return migrate(JSON.parse(r));}catch(e){}
+  return null; // null => not seeded yet
+}
+function migrate(d){
+  d.settings=Object.assign({},DEFAULTS.settings,d.settings||{});
+  if(!d.settings.supplierInfo)d.settings.supplierInfo={};
+  if(!d.settings.email)d.settings.email={method:"mailto",serviceId:"",templateId:"",publicKey:"",relayUrl:"",relayKey:"",fromName:"Bonchon Rogers",replyTo:"",cc:""};
+  if(d.settings.email&&d.settings.email.relayUrl===undefined){d.settings.email.relayUrl="";d.settings.email.relayKey="";}
+  if(d.settings.laborTargetPct===undefined)d.settings.laborTargetPct=28;
+  if(d.settings.laborWage===undefined)d.settings.laborWage=0;
+  if(d.settings.laborSPLH===undefined)d.settings.laborSPLH=0;
+  if(!d.settings.pins)d.settings.pins={associate:"1144",manager:"8800"};
+  d.ingredients=d.ingredients||[];d.menu=d.menu||[];d.sales=d.sales||[];d.orders=d.orders||[];d.register=d.register||[];
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast("Couldn't save — storage full?");}}
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ---------- Sample data (Bonchon Korean Fried Chicken) ---------- */
+function seedSample(){
+  const ing=[];
+  const mk=(name,unit,supplier,pack,code,cost,category)=>{ing.push({id:uid(),name,unit,supplier,pack,onHand:0,orderCode:code||"",cost:cost!=null?cost:null,category:category||"",barcode:""});};
+  // ---- Sysco ----
+  mk("WHLFCLS EGG SHELL MED GR AA USDA WHT","15 DZ","Sysco",1,"2105815",13.95,"Dairy");
+  mk("BONCHON BEEF PRM BULGOGI","15 LB","Sysco",1,"7284079",182.80,"Meats");
+  mk("BONCHON PORK & CHS TONKATSU FRTTR","15 LB","Sysco",1,"7463818",99.48,"Meats");
+  mk("AMOY BUN PLAIN BAO FLD BTRFLY SHPD","24 CT","Sysco",6,"2336375",56.85,"Frozen");
+  mk("ROLLPIN DONUT YEAST RAISED PREM TWIST","82.75 OZ","Sysco",1,"3855566",37.47,"Frozen");
+  mk("BKRSIMP BUN HAMBURGER BRIOCHE 4IN","12 CT","Sysco",1,"7055188",34.55,"Frozen");
+  mk("CHEFONE APTZR POTSTICKER EDAMAME","500.8 OZ","Sysco",1,"7111731",44.13,"Frozen");
+  mk("AMOYROY POTSTICKER PORK & VEG .9OZ","30 PC","Sysco",6,"7282599",44.69,"Frozen");
+  mk("PIMUONE CORN DOG KOREAN","84 EA","Sysco",1,"7322572",99.05,"Frozen");
+  mk("SYS CLS SOYBEAN WHOLE IN POD EDAMAME","4 LB","Sysco",6,"9803594",83.23,"Canned & Dry");
+  mk("HUYFONG SAUCE CHILI HOT SRIRACHA","28 OZ","Sysco",12,"2451417",55.36,"Canned & Dry");
+  mk("KIKOMAN SAUCE SOY PACKET",".5 OZ","Sysco",200,"4239851",12.82,"Canned & Dry");
+  mk("SYS REL KETCHUP PACKET FOIL","7 GM","Sysco",1000,"4274981",31.07,"Canned & Dry");
+  mk("SYS CLS SUGAR GRANULATED XFINE CANE","50 LB","Sysco",1,"4782694",41.07,"Canned & Dry");
+  mk("JDMTCLS RICE 103 LONG GRAIN","50 LB","Sysco",1,"5848072",25.66,"Canned & Dry");
+  // ---- Performance (PFG) ----
+  mk("SLVR SRC OIL SOY CLR FRY TFF","35 LB","Performance (PFG)",1,"897414",40.04,"Dry");
+  mk("WEST CRK CORN WHL KERNEL","#10 CN","Performance (PFG)",6,"863494",35.79,"Dry");
+  mk("WEST CRK MAYO WHL EGG GF","1 GA","Performance (PFG)",4,"201346",54.02,"Dry");
+  mk("WEST CRK DRESSING COLESLAW TFF","1 GA","Performance (PFG)",4,"201325",52.34,"Dry");
+  mk("BUCCANEE JUG GA TEA W/RED SAFETY L","24 CT","Performance (PFG)",1,"315364",26.18,"Dry");
+  mk("WEST CRK CHICKEN WING 1ST & 2ND ME","10 LB","Performance (PFG)",4,"158756",54.99,"Refrigerated");
+  mk("WEST CRK CHICKEN DRUMSTICK CVP","20 LB","Performance (PFG)",2,"852023",32.95,"Refrigerated");
+  mk("SLVR SRC CHICKEN BRST B/S MAR JUMB","10 LB","Performance (PFG)",4,"887556",71.96,"Refrigerated");
+  mk('LUIGI FRIES 3/8" REG CUT CLR CO',"4.5 LB","Performance (PFG)",6,"416250",41.44,"Frozen");
+  mk("ST CLAIR MACARONI & CHEESE WHI CHE","4 LB","Performance (PFG)",4,"649320",55.66,"Frozen");
+  // ---- Asian Fresh Market (local vendor) ----
+  mk("Daikon","case","Asian Fresh Market",1,"",36.00,"Produce");
+  mk("Ramune Strawberry","case","Asian Fresh Market",1,"",36.50,"Beverage");
+  mk("Ramune Peach","case","Asian Fresh Market",1,"",36.50,"Beverage");
+  mk("Surasang Sanuki Noodles - Frozen","2.2 LB","Asian Fresh Market",8,"",36.00,"Frozen");
+  mk("Wang Fish Cake - Square Type","each","Asian Fresh Market",1,"",8.00,"Frozen");
+
+  S={
+    settings:{...DEFAULTS.settings,suppliers:["Sysco","Performance (PFG)","Asian Fresh Market"],supplierInfo:{
+      "Sysco":{account:"",url:"shop.sysco.com",email:"",cutoff:"Order by 4 PM for next-day"},
+      "Performance (PFG)":{account:"",url:"order.pfgc.com",email:"",cutoff:"Tue & Fri cutoff 3 PM"},
+      "Asian Fresh Market":{account:"",url:"",email:"asianfreshsupermarket@gmail.com",cutoff:"Local vendor — email the order"}
+    }},
+    ingredients:ing,
+    menu:[],
+    sales:[],
+    orders:[],
+    register:genDemoRegister()
+  };
+  save();
+}
+
+function genDemoRegister(){
+  const out=[];const today=new Date();const emps=["jdoe","mlee","asmith"];
+  for(let d=44;d>=0;d--){
+    const dt=new Date(today);dt.setDate(today.getDate()-d);
+    const wk=dt.getDay();const busy=(wk===5||wk===6)?1.45:(wk===0?1.1:1);
+    const net=Math.round((3200+Math.random()*900)*busy);
+    const cash=Math.round(net*(0.36+Math.random()*0.06));
+    const employees=emps.map((name,i)=>{
+      const share=[0.42,0.33,0.25][i];
+      const sales=Math.round(net*share);
+      let comps=Math.round(sales*0.015*Math.random());
+      let voids=Math.round(sales*0.01*Math.random());
+      let voidCount=Math.round(Math.random()*2);
+      let compCount=Math.round(Math.random()*2);
+      let noSales=Math.round(Math.random()*2);
+      if(name==="asmith"&&d<12){ // pattern develops over the last ~12 days
+        voidCount=6+Math.round(Math.random()*6);
+        compCount=5+Math.round(Math.random()*5);
+        noSales=5+Math.round(Math.random()*5);
+        voids=Math.round(sales*(0.06+Math.random()*0.05));
+        comps=Math.round(sales*(0.07+Math.random()*0.05));
+      }
+      const eCash=Math.round(sales*(0.36+Math.random()*0.06));
+      return {name,sales,cash:eCash,credit:sales-eCash,comps,promos:Math.round(sales*0.01*Math.random()),voids,voidCount,compCount,noSales,refunds:0};
+    });
+    const comps=employees.reduce((a,e)=>a+e.comps,0);
+    const promos=employees.reduce((a,e)=>a+e.promos,0);
+    const voids=employees.reduce((a,e)=>a+e.voids,0);
+    const noSales=employees.reduce((a,e)=>a+e.noSales,0);
+    const transactions=Math.round(net/(13+Math.random()*3));
+    const guests=Math.round(transactions*(1.15+Math.random()*0.25));
+    const laborHours=Math.round((net/34)*10)/10;
+    const laborCost=Math.round(laborHours*13.25);
+    const refunds=Math.round(net*0.004*Math.random());
+    const cashOverShort=Math.round((Math.random()*30-12-(d<12?8:0))*100)/100;
+    const lunch=Math.round(net*(0.42+Math.random()*0.05));
+    out.push({date:dt.toISOString().slice(0,10),net,gross:net+comps+promos,cash,credit:net-cash,comps,promos,voids,refunds,
+      transactions,guests,noSales,cashOverShort,labor:{hours:laborHours,cost:laborCost},
+      dayparts:[{name:"Lunch",net:lunch},{name:"Dinner",net:net-lunch}],employees});
+  }
+  return out;
+}
+
+/* ---------- Helpers ---------- */
+function ingById(id){return S.ingredients.find(i=>i.id===id);}
+function menuById(id){return S.menu.find(m=>m.id===id);}
+function fmt(n){if(n===Math.round(n))return String(n);return (Math.round(n*100)/100).toString();}
+function money(n){return "$"+(Math.round((Number(n)||0)*100)/100).toFixed(2);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
+/* Days of sales data available */
+function salesDays(){return new Set(S.sales.map(s=>s.date)).size;}
+
+/* Total units consumed per ingredient across ALL logged sales */
+function totalConsumption(){
+  const c={}; // ingId -> units
+  S.sales.forEach(s=>{
+    Object.entries(s.counts||{}).forEach(([mid,q])=>{
+      const m=menuById(mid);if(!m)return;
+      (m.recipe||[]).forEach(([iid,per])=>{c[iid]=(c[iid]||0)+per*Number(q);});
+    });
+  });
+  return c;
+}
+
+/* Consumption for a single sales record: ingId -> units used */
+function consumptionForRecord(rec){
+  const c={};
+  Object.entries(rec.counts||{}).forEach(([mid,q])=>{
+    const m=menuById(mid);if(!m)return;
+    (m.recipe||[]).forEach(([iid,per])=>{c[iid]=(c[iid]||0)+per*Number(q);});
+  });
+  return c;
+}
+
+/* Subtract a day's sales from on-hand stock. Returns list of shortages. */
+function applySalesToInventory(date){
+  const rec=S.sales.find(s=>s.date===date);
+  if(!rec||rec.applied)return [];
+  const deltas=consumptionForRecord(rec);
+  const removed={},shortages=[];
+  Object.entries(deltas).forEach(([iid,units])=>{
+    const ing=ingById(iid);if(!ing)return;
+    const before=Number(ing.onHand)||0;
+    const take=Math.min(before,units);
+    ing.onHand=before-take;
+    removed[iid]=take;
+    if(units-take>0.0001)shortages.push({name:ing.name,short:units-take,unit:ing.unit});
+  });
+  rec.applied=true;rec.removed=removed;
+  save();
+  return shortages;
+}
+
+/* Put back what a day's sales removed from stock. */
+function undoApply(date){
+  const rec=S.sales.find(s=>s.date===date);
+  if(!rec||!rec.applied)return;
+  const r=rec.removed||consumptionForRecord(rec);
+  Object.entries(r).forEach(([iid,units])=>{const ing=ingById(iid);if(ing)ing.onHand=(Number(ing.onHand)||0)+units;});
+  rec.applied=false;delete rec.removed;
+  save();
+}
+
+/* Replace a date's sales record safely (restores stock first if it was posted). */
+function replaceSalesForDate(date,counts){
+  const ex=S.sales.find(s=>s.date===date);
+  if(ex&&ex.applied)undoApply(date);
+  S.sales=S.sales.filter(s=>s.date!==date);
+  if(counts&&Object.keys(counts).length)S.sales.push({date,counts});
+}
+
+/* Build the order recommendation */
+function buildOrder(){
+  const days=salesDays();
+  const cons=totalConsumption();
+  const cycle=Number(S.settings.cycleDays)||7;
+  const safety=Number(S.settings.safetyDays)||0;
+  const cover=cycle+safety;
+  const lines=[];
+  S.ingredients.forEach(i=>{
+    const used=cons[i.id]||0;
+    const avgDaily=days>0?used/days:0;
+    const target=avgDaily*cover;
+    const onHand=Number(i.onHand)||0;
+    const needUnits=Math.max(0,target-onHand);
+    const pack=Number(i.pack)||1;
+    const cases=needUnits>0?Math.ceil(needUnits/pack):0;
+    lines.push({
+      id:i.id,name:i.name,unit:i.unit,supplier:i.supplier,pack,onHand,
+      avgDaily,target,needUnits,cases,orderUnits:cases*pack,
+      low:onHand<avgDaily*cycle // below one cycle of cover
+    });
+  });
+  return {days,cover,cycle,lines};
+}
+
+/* ---------- Rendering ---------- */
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+
+function renderAll(){renderOrder();renderRegister();renderSalesEnter();renderMenu();renderInv();renderData();updateAlertBadge();}
+
+let orderTab='suggested';
+function supplierInfo(name){return (S.settings.supplierInfo&&S.settings.supplierInfo[name])||{};}
+function supplierStyle(name){
+  const n=(name||"").toLowerCase();
+  if(n.includes("sysco"))return {bg:"#0071CE",label:"Sysco"};
+  if(n.includes("perform")||n.includes("pfg"))return {bg:"#D6202E",label:"Performance"};
+  return {bg:"var(--surface2)",label:name||"Other"};
+}
+function supplierBadge(name,lg){
+  const s=supplierStyle(name);
+  return `<span class="supbadge${lg?" lg":""}" style="background:${s.bg}">${s.label}</span>`;
+}
+
+/* ---------- Register dashboard + loss-prevention ---------- */
+function regSorted(){return S.register.slice().sort((a,b)=>a.date.localeCompare(b.date));}
+function monthSum(records){const s={net:0,cash:0,credit:0,comps:0,promos:0,voids:0,days:records.length};
+  records.forEach(r=>{s.net+=r.net||0;s.cash+=r.cash||0;s.credit+=r.credit||0;s.comps+=r.comps||0;s.promos+=r.promos||0;s.voids+=r.voids||0;});return s;}
+function prevMonthKey(k){let[y,m]=k.split("-").map(Number);m--;if(m<1){m=12;y--;}return y+"-"+String(m).padStart(2,"0");}
+
+/* Associates whose voids/comps over the last 7 days exceed the alert limits */
+function flaggedEmployees(){
+  const recent=regSorted().slice(-7);if(!recent.length)return [];
+  const agg={};
+  recent.forEach(r=>(r.employees||[]).forEach(e=>{
+    const a=agg[e.name]||(agg[e.name]={name:e.name,sales:0,comps:0,voids:0,voidCount:0,compCount:0,noSales:0,days:0});
+    a.sales+=e.sales||0;a.comps+=e.comps||0;a.voids+=e.voids||0;a.voidCount+=e.voidCount||0;a.compCount+=e.compCount||0;a.noSales+=e.noSales||0;a.days++;
+  }));
+  const maxVoids=Number(S.settings.alertVoids)||6, maxCompPct=Number(S.settings.alertCompPct)||8, maxNoSales=Number(S.settings.alertNoSales)||5;
+  const flags=[];
+  Object.values(agg).forEach(a=>{
+    const voidsPerDay=a.voidCount/Math.max(1,a.days), compPct=a.sales>0?a.comps/a.sales*100:0, noSalesPerDay=a.noSales/Math.max(1,a.days);
+    const reasons=[];
+    if(voidsPerDay>=maxVoids)reasons.push(voidsPerDay.toFixed(1)+" voids/day");
+    if(compPct>=maxCompPct)reasons.push(compPct.toFixed(0)+"% of sales comped");
+    if(noSalesPerDay>=maxNoSales)reasons.push(noSalesPerDay.toFixed(1)+" no-sale opens/day");
+    if(reasons.length)flags.push({name:a.name,reasons,removed:a.comps+a.voids,voidCount:a.voidCount,compCount:a.compCount,noSales:a.noSales});
+  });
+  return flags.sort((x,y)=>y.removed-x.removed);
+}
+
+function updateAlertBadge(){const dot=$("#reg-dot");if(dot)dot.style.display=flaggedEmployees().length?"block":"none";}
+
+/* ---- Labor projection ---- */
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function dowOf(dStr){return new Date(dStr+"T00:00").getDay();}
+function blendedWage(){
+  if(Number(S.settings.laborWage)>0)return Number(S.settings.laborWage);
+  const recs=S.register.filter(r=>r.labor&&r.labor.hours>0).slice(-30);
+  const h=recs.reduce((a,r)=>a+r.labor.hours,0),c=recs.reduce((a,r)=>a+r.labor.cost,0);
+  return h?c/h:13.5;
+}
+function avgSPLH(){
+  if(Number(S.settings.laborSPLH)>0)return Number(S.settings.laborSPLH);
+  const recs=S.register.filter(r=>r.labor&&r.labor.hours>0&&r.net>0).slice(-30);
+  const net=recs.reduce((a,r)=>a+r.net,0),h=recs.reduce((a,r)=>a+r.labor.hours,0);
+  return h?net/h:45;
+}
+function forecastNetForDow(wd){
+  const vals=S.register.filter(r=>r.net>0&&dowOf(r.date)===wd).map(r=>r.net).slice(-6);
+  if(vals.length)return vals.reduce((a,b)=>a+b,0)/vals.length;
+  const all=S.register.filter(r=>r.net>0).map(r=>r.net);
+  return all.length?all.reduce((a,b)=>a+b,0)/all.length:0;
+}
+function nextWeekStart(){
+  const d=new Date();let add=(8-d.getDay())%7;if(add===0)add=7; // upcoming Monday (next week)
+  d.setDate(d.getDate()+add);d.setHours(0,0,0,0);return d;
+}
+function projectLaborWeek(){
+  const splh=avgSPLH(),rows=[];const start=nextWeekStart();
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);
+    const wd=d.getDay(),f=forecastNetForDow(wd),hours=splh?f/splh:0;
+    rows.push({label:DOW[wd]+" "+(d.getMonth()+1)+"/"+d.getDate(),forecast:f,hours});
+  }
+  const end=new Date(start);end.setDate(start.getDate()+6);
+  const range=(start.getMonth()+1)+"/"+start.getDate()+" – "+(end.getMonth()+1)+"/"+end.getDate();
+  return {rows,splh,range,total:rows.reduce((a,r)=>a+r.hours,0)};
+}
+
+function sparkline(vals,h){
+  if(vals.length<2)return "";
+  const w=300,max=Math.max(...vals),min=Math.min(...vals),rng=(max-min)||1;
+  const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-((v-min)/rng)*(h-4)-2).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block">
+    <polyline fill="none" stroke="var(--ember1)" stroke-width="2.5" points="${pts}"/></svg>`;
+}
+
+function renderRegister(){
+  const box=$("#register-body");if(!box)return;box.innerHTML="";
+  if(!S.register||!S.register.length){
+    box.appendChild(el("div","note","No register data yet. This fills in when your Aloha finance export syncs — cash, credit, comps, voids and the username who rang each one. Add your sync link in Setup."));
+    return;
+  }
+  const recs=regSorted(),today=recs[recs.length-1];
+
+  // ---- ALERT ----
+  const flags=flaggedEmployees();
+  if(flags.length){
+    const al=el("div","card alertcard");
+    al.innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-weight:800;color:var(--ember1);font-family:var(--display);font-size:16px">⚠ Suspicious register activity</div>
+      <div class="note" style="margin-top:6px">Over the last 7 days, these associates removed money from checks (voids/comps) above your limits. Comps and voids have legit reasons, so this isn't proof — but it's worth pulling their checks in Aloha to see if orders are being zeroed after taking cash.</div>`;
+    flags.forEach(f=>{
+      const row=el("div","empbar flag");
+      row.innerHTML=`<div class="who">${f.name}</div>
+        <div class="mini" style="text-align:right">${f.reasons.join(" · ")}<br>${f.voidCount} voids · ${f.compCount} comps · ${money(f.removed)} removed</div>`;
+      al.appendChild(row);
+    });
+    box.appendChild(al);
+  }
+
+  // ---- TODAY (latest synced day) ----
+  box.appendChild(el("div","small-label","Latest day · "+today.date));
+  const t=el("div","statgrid");
+  t.innerHTML=`
+    <div class="stat wide"><div class="lbl">Net sales</div><div class="val">${money(today.net)}</div></div>
+    <div class="stat"><div class="lbl">Cash</div><div class="val">${money(today.cash)}</div></div>
+    <div class="stat"><div class="lbl">Credit</div><div class="val">${money(today.credit)}</div></div>
+    <div class="stat"><div class="lbl">Comped</div><div class="val" style="color:var(--amber)">${money(today.comps)}</div></div>
+    <div class="stat"><div class="lbl">Promo</div><div class="val" style="color:var(--amber)">${money(today.promos)}</div></div>
+    <div class="stat wide"><div class="lbl">Voided off checks</div><div class="val" style="color:var(--ember1)">${money(today.voids)}</div></div>`;
+  box.appendChild(t);
+
+  // ---- OWNER SNAPSHOT (shown when the richer data is present) ----
+  const tile=(lbl,val,col)=>`<div class="stat"><div class="lbl">${lbl}</div><div class="val"${col?` style="color:${col}"`:""}>${val}</div></div>`;
+  const snap=[];
+  if(today.transactions){snap.push(tile("Avg check",money(today.net/today.transactions)));snap.push(tile("Transactions",today.transactions));}
+  if(today.guests)snap.push(tile("Guests",today.guests));
+  if(today.labor&&today.net)snap.push(tile("Labor %",(today.labor.cost/today.net*100).toFixed(1)+"%",(today.labor.cost/today.net)>0.30?"var(--ember1)":""));
+  if(today.cashOverShort!=null)snap.push(tile("Cash over/short",money(today.cashOverShort),today.cashOverShort<0?"var(--ember1)":"var(--green)"));
+  if(today.noSales!=null)snap.push(tile("No-sale opens",today.noSales,today.noSales>=(Number(S.settings.alertNoSales)||5)?"var(--ember1)":""));
+  if(today.refunds)snap.push(tile("Refunds",money(today.refunds),"var(--amber)"));
+  if(snap.length){
+    box.appendChild(el("div","small-label","Owner snapshot"));
+    const sg=el("div","statgrid");sg.innerHTML=snap.join("");box.appendChild(sg);
+    if(today.cashOverShort!=null&&today.cashOverShort<=-15)
+      box.appendChild(el("div","note","Drawer came up short "+money(Math.abs(today.cashOverShort))+" today — worth a look alongside the associate activity below."));
+  }
+
+  // ---- TREND ----
+  const last30=recs.slice(-30).map(r=>r.net);
+  if(last30.length>2){
+    const c=el("div","card");c.style.marginTop="12px";
+    c.innerHTML=`<div class="small-label" style="margin-top:0">Net sales — last ${last30.length} days</div>`+sparkline(last30,46);
+    box.appendChild(c);
+  }
+
+  // ---- THIS MONTH vs LAST ----
+  const curK=today.date.slice(0,7), prevK=prevMonthKey(curK);
+  const cur=monthSum(recs.filter(r=>r.date.slice(0,7)===curK));
+  const prev=monthSum(recs.filter(r=>r.date.slice(0,7)===prevK));
+  const avg=(s,k)=>s.days?s[k]/s.days:0;
+  const deltaHTML=(c,p)=>{if(!p)return "";const d=(c-p)/p*100;const up=d>=0;return `<span class="delta ${up?"up":"down"}">${up?"▲":"▼"}${Math.abs(d).toFixed(0)}%</span>`;};
+  box.appendChild(el("div","small-label","This month vs last month (avg / day)"));
+  const m=el("div","statgrid");
+  const rowStat=(lbl,k,money2=true)=>`<div class="stat"><div class="lbl">${lbl}</div><div class="val">${money2?money(avg(cur,k)):avg(cur,k).toFixed(0)}${deltaHTML(avg(cur,k),avg(prev,k))}</div></div>`;
+  m.innerHTML=rowStat("Net / day","net")+rowStat("Cash / day","cash")+rowStat("Credit / day","credit")+rowStat("Comps / day","comps")+rowStat("Voids / day","voids")+
+    `<div class="stat"><div class="lbl">Comp+void %</div><div class="val">${cur.net?((cur.comps+cur.voids)/cur.net*100).toFixed(1):"0"}%${deltaHTML((cur.comps+cur.voids)/(cur.net||1),(prev.comps+prev.voids)/(prev.net||1))}</div></div>`;
+  box.appendChild(m);
+  box.appendChild(el("div","note",`This month: ${money(cur.net)} net over ${cur.days} day${cur.days===1?"":"s"} · last month: ${money(prev.net)} over ${prev.days} day${prev.days===1?"":"s"}.`));
+
+  // ---- LABOR PLAN — next week (hours only) ----
+  const plan=projectLaborWeek();
+  box.appendChild(el("div","small-label","Labor plan · next week"));
+  const lc=el("div","card");
+  const head=el("div","stat wide");head.style.marginBottom="4px";
+  head.innerHTML=`<div class="lbl">Projected labor — week of ${plan.range}</div><div class="val">${Math.round(plan.total)} hours</div>`;
+  lc.appendChild(head);
+  let html='<table class="ltab"><tr><th>Day</th><th>Forecast sales</th><th>Hours needed</th></tr>';
+  plan.rows.forEach(r=>{html+=`<tr><td>${r.label}</td><td>${money(r.forecast)}</td><td>${r.hours.toFixed(1)}</td></tr>`;});
+  html+=`<tr class="tot"><td>Week</td><td>${money(plan.rows.reduce((a,r)=>a+r.forecast,0))}</td><td>${plan.total.toFixed(1)}</td></tr></table>`;
+  const tbl=el("div");tbl.innerHTML=html;lc.appendChild(tbl);
+  lc.appendChild(el("div","note",`Each day's forecast is the average of your recent same-weekday sales. Hours = forecast ÷ about ${money(plan.splh)} in sales per labor hour (pulled from your own history). Set your own target below to staff tighter or looser.`));
+  lc.appendChild(fld("Sales per labor hour target (blank = use my average)",inputEl("lab-splh",S.settings.laborSPLH||"",plan.splh.toFixed(0),true)));
+  const lbtn=el("button","btn green sm","Update labor plan");lbtn.style.width="100%";
+  lbtn.onclick=()=>{
+    const v=$("#lab-splh").value.trim();S.settings.laborSPLH=v?Number(v):0;
+    save();renderRegister();toast("Labor plan updated");
+  };
+  lc.appendChild(lbtn);
+  box.appendChild(lc);
+
+  // ---- BY ASSOCIATE (last 7 days) ----
+  const recent=recs.slice(-7),agg={};
+  recent.forEach(r=>(r.employees||[]).forEach(e=>{
+    const a=agg[e.name]||(agg[e.name]={name:e.name,sales:0,comps:0,voids:0,voidCount:0,compCount:0});
+    a.sales+=e.sales||0;a.comps+=e.comps||0;a.voids+=e.voids||0;a.voidCount+=e.voidCount||0;a.compCount+=e.compCount||0;}));
+  const flagged=new Set(flags.map(f=>f.name));
+  box.appendChild(el("div","small-label","By associate · last 7 days"));
+  const ec=el("div","card");
+  Object.values(agg).sort((a,b)=>(b.comps+b.voids)-(a.comps+a.voids)).forEach(a=>{
+    const row=el("div","empbar"+(flagged.has(a.name)?" flag":""));
+    const pct=a.sales>0?((a.comps+a.voids)/a.sales*100).toFixed(1):"0";
+    row.innerHTML=`<div class="who">${flagged.has(a.name)?"⚠ ":""}${a.name}</div>
+      <div class="mini" style="text-align:right">${money(a.sales)} sales · ${a.voidCount} voids / ${a.compCount} comps<br>${money(a.comps+a.voids)} removed (${pct}%)</div>`;
+    ec.appendChild(row);
+  });
+  box.appendChild(ec);
+
+  // ---- ALERT THRESHOLDS ----
+  const th=el("div","card");
+  th.innerHTML=`<div class="small-label" style="margin-top:0">Alert me when…</div>`;
+  th.appendChild(fld("Voids per associate per day reach",inputEl("alert-voids",S.settings.alertVoids,"6",true)));
+  th.appendChild(fld("…or their comps reach this % of their sales",inputEl("alert-comppct",S.settings.alertCompPct,"8",true)));
+  th.appendChild(fld("…or no-sale drawer opens per day reach",inputEl("alert-nosales",S.settings.alertNoSales,"5",true)));
+  const sb=el("button","btn green sm","Save alert limits");sb.style.width="100%";
+  sb.onclick=()=>{S.settings.alertVoids=Number($("#alert-voids").value)||6;S.settings.alertCompPct=Number($("#alert-comppct").value)||8;S.settings.alertNoSales=Number($("#alert-nosales").value)||5;save();renderRegister();updateAlertBadge();toast("Alert limits saved");};
+  th.appendChild(sb);
+  box.appendChild(th);
+}
+
+function renderOrder(){
+  const box=$("#order-body");box.innerHTML="";
+  const seg=el("div","seg");
+  seg.innerHTML=`<button data-otab="suggested" class="${orderTab==='suggested'?'active':''}">Suggested</button>
+    <button data-otab="orders" class="${orderTab==='orders'?'active':''}">Purchase orders${S.orders.length?` (${S.orders.length})`:''}</button>`;
+  box.appendChild(seg);
+  seg.querySelectorAll("[data-otab]").forEach(b=>b.onclick=()=>{orderTab=b.dataset.otab;renderOrder();});
+
+  if(orderTab==='orders'){$("#order-window").textContent="Approved orders, ready to send to each distributor";renderPOList(box);return;}
+
+  if(!S.menu.length||!S.ingredients.length){
+    box.appendChild(emptyState("📦","Nothing to order yet","Add your stock items and menu recipes first, then log a few days of sales.","Set up menu","menu"));
+    $("#order-window").textContent="Based on your sales averages";return;
+  }
+  const o=buildOrder();
+  if(o.days===0){
+    box.appendChild(emptyState("📈","No sales logged yet","Log sales for at least a day or two and I'll project your order.","Log sales","sales"));
+    $("#order-window").textContent="Based on your sales averages";return;
+  }
+  $("#order-window").textContent=`${o.days} day${o.days>1?"s":""} of sales · covering ${o.cover} days (${o.cycle}-day cycle + ${o.cover-o.cycle} buffer)`;
+
+  const ordering=o.lines.filter(l=>l.cases>0);
+  const totalCases=ordering.reduce((a,l)=>a+l.cases,0);
+  const supCount=new Set(ordering.map(l=>l.supplier)).size;
+  const estTotal=ordering.reduce((a,l)=>{const ing=ingById(l.id)||{};return a+l.cases*(Number(ing.cost)||0);},0);
+
+  const sum=el("div","ordersum");
+  sum.innerHTML=`<div class="big num">${totalCases}</div>
+    <div class="biglabel">case${totalCases===1?"":"s"} across ${supCount} supplier${supCount===1?"":"s"}${estTotal>0?` · est. <span class="num">${money(estTotal)}</span>`:""}</div>`;
+  box.appendChild(sum);
+
+  if(!ordering.length){
+    box.appendChild(el("div","card",`<div class="row between"><div>You're stocked for the week.</div><span class="pill ok">All good</span></div>
+      <div class="note">On-hand counts already cover your projected usage for the next ${o.cover} days.</div>`));
+  }
+
+  const groups={};
+  ordering.forEach(l=>{(groups[l.supplier]=groups[l.supplier]||[]).push(l);});
+  const colors={};const palette=["var(--ember1)","var(--green)","var(--amber)","#7aa2ff","#c98cff"];
+  Object.keys(groups).forEach((sup,i)=>colors[sup]=palette[i%palette.length]);
+
+  Object.entries(groups).forEach(([sup,lines])=>{
+    const subtotal=lines.reduce((a,l)=>{const ing=ingById(l.id)||{};return a+l.cases*(Number(ing.cost)||0);},0);
+    const head=el("div","supplier-head");
+    head.innerHTML=`${supplierBadge(sup,true)}<span style="text-transform:none;color:var(--muted);font-weight:600;margin-left:9px">${lines.length} item${lines.length>1?"s":""}${subtotal>0?` · <span class="num">${money(subtotal)}</span>`:""}</span>`;
+    box.appendChild(head);
+    const card=el("div","card");card.style.padding="6px 14px";
+    lines.forEach(l=>{
+      const ing=ingById(l.id)||{};
+      const line=el("div","orderline");
+      line.innerHTML=`<div class="nm">${l.name}
+          ${l.low?'<span class="pill low" style="margin-left:6px">low</span>':''}
+          <div class="meta">${ing.orderCode?ing.orderCode+" · ":""}on hand ${fmt(l.onHand)} ${l.unit} · ~${fmt(l.avgDaily)}/day</div></div>
+        <div class="qty">${l.cases} <small>case${l.cases>1?"s":""} · ${fmt(l.orderUnits)} ${l.unit}</small></div>`;
+      card.appendChild(line);
+    });
+    box.appendChild(card);
+  });
+
+  const approve=el("button","btn ember","✓ Approve &amp; create purchase orders");
+  approve.style.marginTop="18px";
+  if(!ordering.length){approve.style.opacity=".45";approve.disabled=true;}
+  approve.onclick=()=>approveOrder();
+  box.appendChild(approve);
+
+  const btns=el("div","btn-row");btns.style.marginTop="9px";
+  btns.innerHTML=`<button class="btn ghost" id="copy-order">⧉ Copy</button>
+                  <button class="btn ghost" id="csv-order">⭳ CSV</button>`;
+  box.appendChild(btns);
+  $("#copy-order").onclick=()=>copyOrder(groups);
+  $("#csv-order").onclick=()=>csvOrder(ordering);
+
+  box.appendChild(el("div","note",
+    `Approving snapshots these quantities into a purchase order per supplier — then you can email the rep or jump to their portal to place it. Set portal links and rep emails in Setup.`));
+}
+
+/* Snapshot the suggested order into per-supplier purchase orders */
+function approveOrder(){
+  const o=buildOrder();
+  const ordering=o.lines.filter(l=>l.cases>0);
+  if(!ordering.length){toast("Nothing to order right now");return;}
+  const groups={};ordering.forEach(l=>(groups[l.supplier]=groups[l.supplier]||[]).push(l));
+  const batch=uid(),date=todayStr();
+  Object.entries(groups).forEach(([sup,lines])=>{
+    S.orders.unshift({id:uid(),batch,date,supplier:sup,status:"approved",
+      lines:lines.map(l=>{const ing=ingById(l.id)||{};const cost=Number(ing.cost)||0;return {name:l.name,code:ing.orderCode||"",cases:l.cases,units:l.orderUnits,unit:l.unit,cost,ext:l.cases*cost};})});
+  });
+  save();orderTab='orders';renderOrder();toast("Purchase orders created");
+}
+
+function renderPOList(box){
+  if(!S.orders.length){
+    const e=el("div","empty");
+    e.innerHTML=`<div class="ico">🧾</div><h3>No purchase orders yet</h3><p>Approve a suggested order and it becomes a purchase order for each supplier — ready to email or open in their portal.</p>`;
+    const b=el("button","btn ember","View suggested order");b.style.maxWidth="240px";b.style.margin="0 auto";
+    b.onclick=()=>{orderTab='suggested';renderOrder();};
+    e.appendChild(b);box.appendChild(e);return;
+  }
+  const batches={};S.orders.forEach(o=>{(batches[o.batch]=batches[o.batch]||[]).push(o);});
+  Object.keys(batches).sort((a,b)=>batches[b][0].date.localeCompare(batches[a][0].date)).forEach(bid=>{
+    const pos=batches[bid];
+    box.appendChild(el("div","small-label",pos[0].date+" · "+pos.length+" supplier order"+(pos.length>1?"s":"")));
+    pos.forEach(po=>box.appendChild(poCard(po)));
+  });
+}
+
+function poCard(po){
+  const inf=supplierInfo(po.supplier);
+  const totalCases=po.lines.reduce((a,l)=>a+l.cases,0);
+  const totalCost=po.lines.reduce((a,l)=>a+(Number(l.ext)||0),0);
+  const card=el("div","card");
+  card.innerHTML=`<div class="row between" style="margin-bottom:8px">
+      <div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">${supplierBadge(po.supplier,true)}${po.status==="placed"?'<span class="pill ok">placed</span>':'<span class="pill">approved</span>'}</div>
+        <div class="desc">${totalCases} case${totalCases===1?"":"s"} · ${po.lines.length} item${po.lines.length===1?"":"s"}${totalCost>0?` · <span class="num">${money(totalCost)}</span>`:""}${inf.account?` · acct ${inf.account}`:""}</div></div>
+      <button class="iconbtn" data-delpo="${po.id}">🗑</button></div>`;
+  const lines=el("div");
+  po.lines.forEach(l=>{
+    const row=el("div","orderline");
+    row.innerHTML=`<div class="nm">${l.name}<div class="meta">${l.code?l.code+" · ":""}${fmt(l.units)} ${l.unit}</div></div>
+      <div class="qty">${l.cases} <small>case${l.cases>1?"s":""}</small></div>`;
+    lines.appendChild(row);
+  });
+  card.appendChild(lines);
+
+  const a1=el("div","btn-row");a1.style.marginTop="12px";
+  a1.innerHTML=`<button class="btn ember sm" data-emailpo="${po.id}">✉ Email rep</button>
+    <button class="btn ghost sm" data-portalpo="${po.id}">↗ Open portal</button>`;
+  card.appendChild(a1);
+  const a2=el("div","btn-row");a2.style.marginTop="8px";
+  a2.innerHTML=`<button class="btn ghost sm" data-copypo="${po.id}">⧉ Copy</button>
+    <button class="btn ghost sm" data-csvpo="${po.id}">⭳ CSV</button>
+    <button class="btn ${po.status==='placed'?'ghost':'green'} sm" data-togglepo="${po.id}">${po.status==='placed'?'Reopen':'Mark placed'}</button>`;
+  card.appendChild(a2);
+  if(inf.cutoff)card.appendChild(el("div","note",inf.cutoff));
+
+  card.querySelector("[data-delpo]").onclick=()=>{if(confirm("Delete this purchase order?")){S.orders=S.orders.filter(x=>x.id!==po.id);save();renderOrder();}};
+  card.querySelector("[data-emailpo]").onclick=()=>emailPO(po);
+  card.querySelector("[data-portalpo]").onclick=()=>openPortal(po);
+  card.querySelector("[data-copypo]").onclick=()=>copyPO(po);
+  card.querySelector("[data-csvpo]").onclick=()=>csvPO(po);
+  card.querySelector("[data-togglepo]").onclick=()=>{po.status=po.status==='placed'?'approved':'placed';save();renderOrder();toast(po.status==='placed'?"Marked placed":"Reopened");};
+  return card;
+}
+
+function poText(po){
+  const inf=supplierInfo(po.supplier);
+  let t=`Bonchon Purchase Order\n${po.supplier} — ${po.date}\n`;
+  if(inf.account)t+=`Account: ${inf.account}\n`;
+  t+="\n";
+  let tot=0;
+  po.lines.forEach(l=>{tot+=Number(l.ext)||0;t+=`${l.cases} case${l.cases>1?"s":""} — ${l.name}${l.code?` [${l.code}]`:""} (${fmt(l.units)} ${l.unit})${l.cost?` — ${money(l.ext)}`:""}\n`;});
+  if(tot>0)t+=`\nEstimated total: ${money(tot)}\n`;
+  return t;
+}
+function poEmailBody(po){
+  const inf=supplierInfo(po.supplier);
+  let t=`Hi ${po.supplier} team,\n\nHope you're doing well. We'd like to place an order for Bonchon (Rogers). When you get a chance, could you please prepare the following:\n\n`;
+  po.lines.forEach(l=>{t+=`  • ${l.cases} × ${l.name}${l.code?` [${l.code}]`:""}\n`;});
+  if(inf.account)t+=`\nAccount #: ${inf.account}\n`;
+  t+=`\nPlease let us know the total and when it'll be ready, and if anything is unavailable. Thank you so much — we appreciate it!\n\nBest regards,\nBonchon — Rogers\n4204 W Green Acres Rd, Rogers, AR 72758`;
+  return t;
+}
+/* Send an email straight from the app — via your own mail relay, or EmailJS. */
+function emailConfigured(){
+  const e=S.settings.email||{};
+  if(e.method==="relay")return !!e.relayUrl;
+  if(e.method==="emailjs")return !!(e.serviceId&&e.templateId&&e.publicKey);
+  return false;
+}
+async function sendEmailDirect(to,subject,body){
+  const e=S.settings.email||{};
+  if(e.method==="relay"){
+    if(!e.relayUrl)return {ok:false,reason:"no relay url"};
+    try{
+      const res=await fetch(e.relayUrl,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({to:to||"",subject,body,cc:e.cc||"",from_name:e.fromName||"Bonchon Rogers",reply_to:e.replyTo||"",key:e.relayKey||""})});
+      if(res.ok)return {ok:true};
+      return {ok:false,reason:(await res.text())||("HTTP "+res.status)};
+    }catch(err){return {ok:false,reason:String(err)};}
+  }
+  if(e.method!=="emailjs"||!e.serviceId||!e.templateId||!e.publicKey)return {ok:false,reason:"not_configured"};
+  try{
+    const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({service_id:e.serviceId,template_id:e.templateId,user_id:e.publicKey,
+        template_params:{to_email:to||"",subject:subject,message:body,
+          from_name:e.fromName||"Bonchon Rogers",reply_to:e.replyTo||"",cc:e.cc||""}})
+    });
+    if(res.ok)return {ok:true};
+    return {ok:false,reason:(await res.text())||("HTTP "+res.status)};
+  }catch(err){return {ok:false,reason:String(err)};}
+}
+async function emailPO(po){
+  const inf=supplierInfo(po.supplier);
+  const subject="ROGERS - BONCHON ORDER";
+  const body=poEmailBody(po);
+  if(emailConfigured()){
+    if(!inf.email){toast("Add "+po.supplier+"'s email in Setup → Suppliers");return;}
+    if(!confirm("Send this order straight to "+inf.email+" now?"))return;
+    toast("Sending…");
+    const r=await sendEmailDirect(inf.email,subject,body);
+    if(r.ok){po.status="placed";po.sentAt=new Date().toISOString();save();renderOrder();toast("Order emailed to "+po.supplier);}
+    else toast("Send failed — check Email setup in Setup");
+    return;
+  }
+  const subj=encodeURIComponent(subject);const b=encodeURIComponent(body);
+  window.location.href=`mailto:${inf.email||""}?subject=${subj}&body=${b}`;
+  if(!inf.email)setTimeout(()=>toast("Tip: add the vendor's email in Setup"),500);
+}
+function openPortal(po){
+  const inf=supplierInfo(po.supplier);let u=inf.url;
+  if(!u){toast("Add this supplier's portal link in Setup");return;}
+  if(!/^https?:\/\//i.test(u))u="https://"+u;
+  window.open(u,"_blank","noopener");
+}
+function copyPO(po){const t=poText(po);if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast("Order copied"),()=>fallbackCopy(t));else fallbackCopy(t);}
+function csvPO(po){
+  let csv="Item,Order code,Cases,Units,Unit,Cost/case,Extended\n";
+  po.lines.forEach(l=>{csv+=[l.name,l.code,l.cases,fmt(l.units),l.unit,l.cost!=null?l.cost:"",l.ext!=null?l.ext:""].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")+"\n";});
+  download(new Blob([csv],{type:"text/csv"}),"PO-"+po.supplier.replace(/\W+/g,"_")+"-"+po.date+".csv");toast("CSV downloaded");
+}
+
+function emptyState(ico,title,msg,btn,nav){
+  const e=el("div","empty");
+  e.innerHTML=`<div class="ico">${ico}</div><h3>${title}</h3><p>${msg}</p>`;
+  const b=el("button","btn ember",btn);b.style.maxWidth="240px";b.style.margin="0 auto";
+  b.onclick=()=>go(nav);e.appendChild(b);
+  return e;
+}
+
+/* ---- Sales: enter counts ---- */
+let salesDate=todayStr();
+function renderSalesEnter(){
+  const box=$("#sales-enter");box.innerHTML="";
+  if(!S.menu.length){
+    box.appendChild(emptyState("🍗","No menu items yet","Add your dishes under Menu so you can log how many sold.","Add menu","menu"));
+    return;
+  }
+  const dwrap=el("label","fld");
+  dwrap.innerHTML=`<span>Sales date</span>`;
+  const dinput=el("input","input");dinput.type="date";dinput.value=salesDate;
+  dinput.onchange=e=>{salesDate=e.target.value;renderSalesEnter();};
+  dwrap.appendChild(dinput);box.appendChild(dwrap);
+
+  const existing=S.sales.find(s=>s.date===salesDate);
+  const counts=existing?{...existing.counts}:{};
+
+  const card=el("div","card");
+  card.innerHTML=`<div class="small-label" style="margin-top:0">Quantity sold</div>`;
+  S.menu.forEach(m=>{
+    const r=el("div","salesrow");
+    r.innerHTML=`<div><div class="nm">${m.name}</div><div class="sub">${(m.recipe||[]).length} ingredient${(m.recipe||[]).length===1?"":"s"}</div></div>`;
+    const q=el("input","qtyinput");q.type="number";q.min="0";q.inputMode="numeric";
+    q.value=counts[m.id]!=null?counts[m.id]:"";q.placeholder="0";
+    q.dataset.mid=m.id;
+    card.appendChild(r);r.appendChild(q);
+  });
+  box.appendChild(card);
+
+  function readCounts(){const c={};card.querySelectorAll("input[data-mid]").forEach(inp=>{const v=Number(inp.value);if(v>0)c[inp.dataset.mid]=v;});return c;}
+
+  // live usage preview
+  const preview=el("div","card");
+  function renderPreview(){
+    const c=readCounts(),cons={};
+    Object.entries(c).forEach(([mid,q])=>{const m=menuById(mid);if(!m)return;(m.recipe||[]).forEach(([iid,per])=>cons[iid]=(cons[iid]||0)+per*q);});
+    const lines=Object.entries(cons).map(([iid,u])=>{const ing=ingById(iid);return ing?{amt:fmt(u),txt:ing.unit+" "+ing.name}:null;}).filter(Boolean);
+    preview.innerHTML=`<div class="small-label" style="margin-top:0">Will deduct from stock</div>`+
+      (lines.length?lines.map(l=>`<div class="desc"><b class="num">${l.amt}</b> ${l.txt}</div>`).join("")
+        :`<div class="desc">Enter quantities above to see what gets used. Per-item amounts come from each dish's recipe on the Menu tab.</div>`);
+  }
+  card.querySelectorAll("input[data-mid]").forEach(inp=>inp.addEventListener("input",renderPreview));
+  renderPreview();box.appendChild(preview);
+
+  const btnRow=el("div","btn-row");
+  const saveBtn=el("button","btn ghost","Save only");
+  saveBtn.onclick=()=>{replaceSalesForDate(salesDate,readCounts());save();renderOrder();renderSalesEnter();toast("Sales saved");};
+  const deductBtn=el("button","btn ember","Save &amp; deduct stock");
+  deductBtn.onclick=()=>{
+    replaceSalesForDate(salesDate,readCounts());save();
+    const sh=applySalesToInventory(salesDate);
+    renderOrder();renderInv();renderSalesEnter();
+    if(sh.length)shortageAlert(sh);else toast("Deducted from stock");
+  };
+  btnRow.appendChild(saveBtn);btnRow.appendChild(deductBtn);box.appendChild(btnRow);
+
+  if(S.sales.length){
+    box.appendChild(el("div","small-label","Logged days"));
+    const list=el("div");
+    S.sales.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(s=>{
+      const tot=Object.values(s.counts).reduce((a,b)=>a+b,0);
+      const row=el("div","item");
+      row.innerHTML=`<div class="row between">
+        <div><div class="title">${s.date} ${s.applied?'<span class="pill ok">deducted</span>':''}</div>
+          <div class="desc">${tot} item${tot===1?"":"s"} sold</div></div>
+        <div class="row" style="gap:7px">
+          <button class="iconbtn" data-editday="${s.date}">✎</button>
+          <button class="btn ${s.applied?'ghost':'green'} sm" data-applyday="${s.date}">${s.applied?'Undo':'Deduct'}</button>
+        </div></div>`;
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    list.querySelectorAll("[data-editday]").forEach(b=>b.onclick=()=>{salesDate=b.dataset.editday;renderSalesEnter();window.scrollTo({top:0,behavior:"smooth"});});
+    list.querySelectorAll("[data-applyday]").forEach(b=>b.onclick=()=>{
+      const d=b.dataset.applyday,rec=S.sales.find(x=>x.date===d);
+      if(rec.applied){undoApply(d);toast("Put back into stock");}
+      else{const sh=applySalesToInventory(d);if(sh.length)shortageAlert(sh);else toast("Deducted from stock");}
+      renderSalesEnter();renderOrder();renderInv();
+    });
+    box.appendChild(el("div","note","“Deduct” subtracts each day's usage from your on-hand counts (Stock tab). It's reversible — tap Undo to put it back. Receive a shipment? Bump the on-hand number on the Stock item."));
+  }
+}
+
+function shortageAlert(sh){
+  alert("Deducted from stock.\n\nThese hit zero before covering the sales (your count may be off, or you ran out):\n\n"+
+    sh.map(x=>`• ${x.name}: short ${fmt(x.short)} ${x.unit}`).join("\n"));
+  toast("Deducted — some items ran short");
+}
+
+/* ---- Sales: import Aloha CSV ---- */
+function renderSalesImport(){
+  const box=$("#sales-import");box.innerHTML="";
+  box.appendChild(el("div","note",
+    `In Aloha, run the <b>Sales Mix / Product Mix (PMix)</b> report for your date range and export to CSV (or Excel → Save As CSV). Paste it below, or pick the file. I'll match item names to your menu.`));
+
+  const fileWrap=el("label","fld");
+  fileWrap.innerHTML=`<span>CSV file</span>`;
+  const file=el("input","input");file.type="file";file.accept=".csv,text/csv";
+  file.onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();
+    fr.onload=()=>{$("#csv-text").value=fr.result;parseCSVText(fr.result);};fr.readAsText(f);};
+  fileWrap.appendChild(file);box.appendChild(fileWrap);
+
+  const ta=el("textarea","input");ta.id="csv-text";ta.placeholder="…or paste CSV rows here";
+  box.appendChild(ta);
+
+  const dwrap=el("label","fld");
+  dwrap.innerHTML=`<span>Apply to date</span>`;
+  const d=el("input","input");d.type="date";d.id="import-date";d.value=todayStr();
+  dwrap.appendChild(d);box.appendChild(dwrap);
+
+  const parseBtn=el("button","btn ghost","Read CSV");parseBtn.style.marginBottom="10px";
+  parseBtn.onclick=()=>parseCSVText(ta.value);
+  box.appendChild(parseBtn);
+
+  box.appendChild(el("div","",`<div id="csv-result"></div>`));
+}
+
+function parseCSV(text){
+  const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch=='"'){if(text[i+1]=='"'){cell+='"';i++;}else q=false;}else cell+=ch;}
+    else{if(ch=='"')q=true;else if(ch==','){row.push(cell);cell="";}
+      else if(ch=='\n'){row.push(cell);rows.push(row);row=[];cell="";}
+      else if(ch=='\r'){}else cell+=ch;}}
+  if(cell.length||row.length){row.push(cell);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==""));
+}
+
+let csvRows=null;
+function parseCSVText(text){
+  if(!text||!text.trim()){toast("Paste or pick a CSV first");return;}
+  csvRows=parseCSV(text);
+  const res=$("#csv-result");res.innerHTML="";
+  if(csvRows.length<2){res.innerHTML=`<div class="note">Couldn't read rows from that. Make sure it's comma-separated.</div>`;return;}
+  const header=csvRows[0];
+  const card=el("div","card");
+  card.innerHTML=`<div class="small-label" style="margin-top:0">Which columns?</div>`;
+  const nameSel=colPicker(header,guessCol(header,["item","name","product","menu"]),"name");
+  const qtySel=colPicker(header,guessCol(header,["qty","quantity","sold","count","units","#"]),"qty");
+  card.appendChild(fld("Item name column",nameSel));
+  card.appendChild(fld("Quantity sold column",qtySel));
+  res.appendChild(card);
+
+  const btn=el("button","btn ember","Match & preview");
+  btn.onclick=()=>previewImport(Number(nameSel.value),Number(qtySel.value));
+  res.appendChild(btn);
+}
+function colPicker(header,def,id){
+  const s=el("select","input");s.id="col-"+id;
+  header.forEach((h,i)=>{const o=el("option",null,(h||"(column "+(i+1)+")").trim());o.value=i;if(i===def)o.selected=true;s.appendChild(o);});
+  return s;
+}
+function fld(label,node){const w=el("label","fld");w.innerHTML=`<span>${label}</span>`;w.appendChild(node);return w;}
+function guessCol(header,keys){
+  for(let i=0;i<header.length;i++){const h=(header[i]||"").toLowerCase();
+    if(keys.some(k=>h.includes(k)))return i;}
+  return 0;
+}
+function norm(s){return (s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+
+/* ---------- Sync sales from a cloud link (works from any network) ---------- */
+/* Accepts JSON {date, sales:[{item,qty}]} or CSV with item-name + quantity columns */
+function parseSyncPayload(text){
+  text=(text||"").trim();if(!text)return null;
+  // try JSON
+  if(text[0]==="{"||text[0]==="["){
+    try{
+      let j=JSON.parse(text);
+      if(Array.isArray(j))j={sales:j};
+      const rows=(j.sales||j.rows||j.items||[]).map(r=>({
+        name:(r.item||r.name||r.description||r.product||"").toString().trim(),
+        qty:Number(r.qty||r.quantity||r.sold||r.count||0)
+      })).filter(r=>r.name&&r.qty>0);
+      return {date:(j.date||"").slice(0,10)||todayStr(),rows,register:j.register||j.finance||null};
+    }catch(e){/* fall through to CSV */}
+  }
+  // CSV
+  const rows=parseCSV(text);if(rows.length<1)return null;
+  const hdr=rows[0].map(h=>(h||"").trim().toLowerCase());
+  const hasHeader=hdr.some(h=>/item|name|product|qty|quantity|sold|count/.test(h));
+  let nameCol=0,qtyCol=1,data=rows;
+  if(hasHeader){
+    const find=(...k)=>{for(let i=0;i<hdr.length;i++)if(k.some(x=>hdr[i].includes(x)))return i;return -1;};
+    nameCol=find("item","name","product","desc");qtyCol=find("qty","quantity","sold","count","units");
+    if(nameCol<0)nameCol=0;if(qtyCol<0)qtyCol=1;data=rows.slice(1);
+  }
+  const out=data.map(r=>({name:(r[nameCol]||"").trim(),qty:Number((r[qtyCol]||"").replace(/[^0-9.\-]/g,""))})).filter(r=>r.name&&r.qty>0);
+  return {date:todayStr(),rows:out};
+}
+
+async function syncFromAloha(manual){
+  const url=(S.settings.syncUrl||"").trim();
+  if(!url){if(manual)toast("Add your sync link in Setup first");return;}
+  if(manual)toast("Syncing…");
+  let text;
+  try{
+    const res=await fetch(url,{cache:"no-store"});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    text=await res.text();
+  }catch(e){
+    if(manual)toast("Couldn't reach the link — check it, and use the installed app");
+    return;
+  }
+  const parsed=parseSyncPayload(text);
+  if(!parsed||(!parsed.rows.length&&!parsed.register)){if(manual)toast("No sales found in that file");return;}
+  // register / finance data
+  let regAdded=false;
+  if(parsed.register){
+    const reg=parsed.register;reg.date=parsed.date;
+    reg.net=Number(reg.net)||0;reg.cash=Number(reg.cash)||0;reg.credit=Number(reg.credit)||0;
+    reg.comps=Number(reg.comps)||0;reg.promos=Number(reg.promos)||0;reg.voids=Number(reg.voids)||0;
+    reg.employees=Array.isArray(reg.employees)?reg.employees:[];
+    S.register=S.register.filter(r=>r.date!==parsed.date);S.register.push(reg);
+    regAdded=true;
+  }
+  const counts={},unmatched=[];
+  parsed.rows.forEach(r=>{
+    const m=S.menu.find(mn=>norm(mn.name)===norm(r.name))||
+            S.menu.find(mn=>norm(r.name).includes(norm(mn.name))||norm(mn.name).includes(norm(r.name)));
+    if(m)counts[m.id]=(counts[m.id]||0)+r.qty; else unmatched.push(r.name);
+  });
+  if(Object.keys(counts).length){
+    replaceSalesForDate(parsed.date,counts);
+    if(S.settings.syncDeduct)applySalesToInventory(parsed.date);
+  }
+  S.settings.syncLast=new Date().toISOString();
+  save();renderOrder();renderRegister();renderSalesEnter();renderData();updateAlertBadge();
+  const nMatched=Object.keys(counts).length;
+  const flags=flaggedEmployees();
+  if(regAdded&&flags.length){toast("⚠ Synced — suspicious activity flagged, check Register");return;}
+  if(manual||nMatched||regAdded){
+    if(regAdded&&!nMatched)toast("Register synced "+parsed.date);
+    else if(!S.menu.length)toast("Synced, but add your menu items so sales can match");
+    else toast("Synced "+parsed.date+" · "+nMatched+" matched"+(unmatched.length?", "+unmatched.length+" not matched":""));
+  }
+}
+function previewImport(nameCol,qtyCol){
+  const res=$("#csv-result");
+  const data=csvRows.slice(1).map(r=>({name:(r[nameCol]||"").trim(),qty:Number((r[qtyCol]||"").replace(/[^0-9.\-]/g,""))}))
+    .filter(x=>x.name&&x.qty>0);
+  if(!data.length){toast("No usable rows with that mapping");return;}
+  // match to menu
+  const counts={};const matched=[],unmatched=[];
+  data.forEach(d=>{
+    const m=S.menu.find(mn=>norm(mn.name)===norm(d.name))||
+            S.menu.find(mn=>norm(d.name).includes(norm(mn.name))||norm(mn.name).includes(norm(d.name)));
+    if(m){counts[m.id]=(counts[m.id]||0)+d.qty;matched.push(d.name+" → "+m.name+" ("+d.qty+")");}
+    else unmatched.push(d.name+" ("+d.qty+")");
+  });
+  const card=el("div","card");
+  card.innerHTML=`<div class="small-label" style="margin-top:0">Matched ${matched.length}</div>`+
+    matched.map(x=>`<div class="desc" style="color:var(--green)">✓ ${x}</div>`).join("")+
+    (unmatched.length?`<div class="small-label">Skipped — no menu match</div>`+
+      unmatched.map(x=>`<div class="desc">✕ ${x}</div>`).join("")+
+      `<div class="note">Rename these in Aloha to match your menu items, or add them under Menu, then re-import.</div>`:"");
+  res.appendChild(card);
+  if(Object.keys(counts).length){
+    const date=$("#import-date").value;
+    const apply=el("button","btn ghost","Import "+Object.keys(counts).length+" matched into "+date);
+    apply.onclick=()=>{
+      replaceSalesForDate(date,counts);save();toast("Imported");renderOrder();renderSalesEnter();go("order");
+    };
+    const applyDed=el("button","btn ember","Import &amp; deduct from stock");
+    applyDed.onclick=()=>{
+      replaceSalesForDate(date,counts);save();
+      const sh=applySalesToInventory(date);
+      renderOrder();renderSalesEnter();renderInv();go("order");
+      if(sh.length)shortageAlert(sh);else toast("Imported &amp; deducted");
+    };
+    const r2=el("div","btn-row");r2.appendChild(apply);r2.appendChild(applyDed);
+    res.appendChild(r2);
+  }
+}
+
+/* ---- Menu ---- */
+function renderMenu(){
+  const box=$("#menu-list");box.innerHTML="";
+  if(!S.menu.length){box.appendChild(el("div","note","No menu items yet. Add a dish to define what it uses."));return;}
+  S.menu.forEach(m=>{
+    const parts=(m.recipe||[]).map(([iid,q])=>{const i=ingById(iid);return i?`<b>${fmt(q)}</b> ${i.unit}${q!=1&&!i.unit.endsWith("s")?"":""} ${i.name}`:"";}).filter(Boolean);
+    const it=el("div","item");
+    it.innerHTML=`<div class="row between"><div class="title">${m.name}</div>
+      <div class="row" style="gap:7px">
+        <button class="iconbtn" data-edit="${m.id}">✎</button>
+        <button class="iconbtn" data-delm="${m.id}">🗑</button></div></div>
+      <div class="desc">${parts.length?parts.join(" · "):"No ingredients set — tap ✎ to add"}</div>`;
+    box.appendChild(it);
+  });
+  box.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>menuEditor(b.dataset.edit));
+  box.querySelectorAll("[data-delm]").forEach(b=>b.onclick=()=>{if(confirm("Delete this menu item?")){S.menu=S.menu.filter(x=>x.id!==b.dataset.delm);save();renderMenu();renderOrder();}});
+}
+
+function menuEditor(id){
+  const m=id?menuById(id):{id:uid(),name:"",recipe:[]};
+  const overlay=editorShell(id?"Edit menu item":"New menu item");
+  const body=overlay.querySelector(".ed-body");
+
+  body.appendChild(fld("Dish name",inputEl("ed-name",m.name,"e.g. Chicken Katsu")));
+  body.appendChild(el("div","small-label","Recipe — what one order uses"));
+  const recWrap=el("div");recWrap.id="rec-wrap";body.appendChild(recWrap);
+  let recipe=m.recipe?m.recipe.map(r=>[...r]):[];
+
+  function drawRecipe(){
+    recWrap.innerHTML="";
+    if(!S.ingredients.length){recWrap.appendChild(el("div","note","Add stock items first (Stock tab) so you can pick ingredients."));return;}
+    recipe.forEach((r,idx)=>{
+      const row=el("div","reciperow");
+      const sel=el("select","input");
+      S.ingredients.forEach(i=>{const o=el("option",null,i.name);o.value=i.id;if(i.id===r[0])o.selected=true;sel.appendChild(o);});
+      sel.onchange=e=>recipe[idx][0]=e.target.value;
+      const qty=el("input","input");qty.type="number";qty.min="0";qty.step="0.01";qty.value=r[1];qty.inputMode="decimal";
+      qty.onchange=e=>recipe[idx][1]=Number(e.target.value);
+      const del=el("button","iconbtn","✕");del.onclick=()=>{recipe.splice(idx,1);drawRecipe();};
+      row.appendChild(sel);row.appendChild(qty);row.appendChild(del);
+      recWrap.appendChild(row);
+    });
+    const add=el("button","btn ghost sm","＋ Add ingredient");add.style.width="100%";add.style.marginTop="4px";
+    add.onclick=()=>{recipe.push([S.ingredients[0].id,1]);drawRecipe();};
+    recWrap.appendChild(add);
+  }
+  drawRecipe();
+
+  overlay.querySelector(".ed-save").onclick=()=>{
+    const name=overlay.querySelector("#ed-name").value.trim();
+    if(!name){toast("Name it first");return;}
+    m.name=name;m.recipe=recipe.filter(r=>r[0]&&r[1]>0);
+    if(!id)S.menu.push(m);
+    save();closeEditor(overlay);renderMenu();renderOrder();renderSalesEnter();
+  };
+}
+
+/* ---- Inventory ---- */
+function renderInv(){
+  const box=$("#inv-list");box.innerHTML="";
+  if(!S.ingredients.length){box.appendChild(el("div","note","No stock items yet. Add things you order — cups, bowls, chicken, sauces, packaging. Or tap Import to load an invoice."));return;}
+  const supGroups={};
+  S.ingredients.forEach(i=>{(supGroups[i.supplier||"Other"]=supGroups[i.supplier||"Other"]||[]).push(i);});
+  Object.keys(supGroups).sort().forEach(sup=>{
+    const sh=el("div");sh.style.margin="20px 0 10px";sh.innerHTML=supplierBadge(sup,true);
+    box.appendChild(sh);
+    const cats={};
+    supGroups[sup].forEach(i=>{(cats[i.category||""]=cats[i.category||""]||[]).push(i);});
+    Object.keys(cats).sort((a,b)=>{if(a===""&&b!=="")return 1;if(b===""&&a!=="")return -1;return a.localeCompare(b);}).forEach(cat=>{
+      if(cat)box.appendChild(el("div","subcat",cat));
+      cats[cat].forEach(i=>{
+        const it=el("div","item");
+        it.innerHTML=`<div class="row between"><div class="title">${i.name}</div>
+          <div class="row" style="gap:7px">
+            <button class="iconbtn" data-edit="${i.id}">✎</button>
+            <button class="iconbtn" data-del="${i.id}">🗑</button></div></div>
+          <div class="desc" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+            <span>on hand <b>${fmt(i.onHand||0)}</b> ${i.unit} · case = <b>${fmt(i.pack||1)}</b> ${i.unit}${i.orderCode?` · <span class="num" style="color:var(--faint)">${i.orderCode}</span>`:""}${i.barcode?` · <span class="num" style="color:var(--faint)">▦ ${i.barcode}</span>`:""}</span>
+            <button class="pricechip" data-price="${i.id}">${i.cost!=null?money(i.cost)+"/case":"+ price"}</button>
+          </div>`;
+        box.appendChild(it);
+      });
+    });
+  });
+  box.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>invEditor(b.dataset.edit));
+  box.querySelectorAll("[data-price]").forEach(b=>b.onclick=()=>quickPrice(b.dataset.price));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    const used=S.menu.some(m=>(m.recipe||[]).some(r=>r[0]===b.dataset.del));
+    if(used&&!confirm("This item is used in a recipe. Delete anyway?"))return;
+    if(!used&&!confirm("Delete this stock item?"))return;
+    S.ingredients=S.ingredients.filter(x=>x.id!==b.dataset.del);save();renderInv();renderOrder();});
+}
+
+function quickPrice(id){
+  const i=ingById(id);if(!i)return;
+  const v=prompt("New price per case for:\n"+i.name,i.cost!=null?i.cost:"");
+  if(v===null)return;
+  const t=String(v).replace(/[^0-9.]/g,"");
+  i.cost=t===""?null:Number(t);
+  save();renderInv();renderOrder();
+  toast(t===""?"Price cleared":"Price updated to "+money(i.cost));
+}
+
+function invEditor(id,prefill){
+  const i=id?ingById(id):{id:uid(),name:"",unit:"each",supplier:S.settings.suppliers[0]||"Sysco",pack:1,onHand:0,barcode:""};
+  if(!id&&prefill&&prefill.barcode)i.barcode=prefill.barcode;
+  const overlay=editorShell(id?"Edit stock item":"New stock item");
+  const body=overlay.querySelector(".ed-body");
+  body.appendChild(fld("Item name",inputEl("e-name",i.name,"e.g. Rice cup (plastic)")));
+
+  // Barcode + scan
+  const bcWrap=el("label","fld");bcWrap.innerHTML="<span>Barcode / SKU</span>";
+  const bcRow=el("div");bcRow.style.cssText="display:grid;grid-template-columns:1fr auto;gap:8px";
+  const bc=inputEl("e-barcode",i.barcode||"","scan or type");bc.inputMode="numeric";
+  const scanBtn=el("button","btn ghost sm","📷 Scan");scanBtn.style.whiteSpace="nowrap";
+  scanBtn.onclick=()=>openScanner(async code=>{
+    bc.value=code;
+    const nameEl=overlay.querySelector("#e-name");
+    if(!nameEl.value.trim()){
+      toast("Looking up product…");
+      const nm=await lookupProduct(code);
+      if(nm){nameEl.value=nm;toast("Found: "+nm);}else toast("Barcode saved — add the name");
+    }else toast("Barcode captured");
+  });
+  bcRow.appendChild(bc);bcRow.appendChild(scanBtn);bcWrap.appendChild(bcRow);body.appendChild(bcWrap);
+
+  const g=el("div","grid2");
+  g.appendChild(fld("Unit",inputEl("e-unit",i.unit,"cup, bowl, lb, packet")));
+  // supplier select with custom
+  const supWrap=el("label","fld");supWrap.innerHTML="<span>Supplier</span>";
+  const sup=el("select","input");sup.id="e-sup";
+  const sups=[...new Set([...S.settings.suppliers,i.supplier].filter(Boolean))];
+  sups.forEach(s=>{const o=el("option",null,s);o.value=s;if(s===i.supplier)o.selected=true;sup.appendChild(o);});
+  const oc=el("option",null,"+ Other…");oc.value="__other";sup.appendChild(oc);
+  sup.onchange=e=>{if(e.target.value==="__other"){const n=prompt("Supplier name?");if(n){const o=el("option",null,n);o.value=n;sup.insertBefore(o,oc);sup.value=n;if(!S.settings.suppliers.includes(n)){S.settings.suppliers.push(n);save();}}else sup.value=sups[0];}};
+  supWrap.appendChild(sup);g.appendChild(supWrap);
+  body.appendChild(g);
+  const g2=el("div","grid2");
+  g2.appendChild(fld("Units per case",inputEl("e-pack",i.pack,"500",true)));
+  g2.appendChild(fld("On hand now",inputEl("e-onhand",i.onHand,"0",true)));
+  body.appendChild(g2);
+  body.appendChild(fld("Supplier order code (SUPC / item #)",inputEl("e-ordercode",i.orderCode||"","e.g. SUPC 4288015")));
+  // category with suggestions
+  const catWrap=el("label","fld");catWrap.innerHTML="<span>Category (within supplier)</span>";
+  const catIn=inputEl("e-cat",i.category||"","Dry, Refrigerated, Frozen, Paper…");
+  catIn.setAttribute("list","cat-suggestions");
+  const dl=el("datalist");dl.id="cat-suggestions";
+  [...new Set(["Dry","Refrigerated","Frozen","Paper","Beverage",...S.ingredients.map(x=>x.category).filter(Boolean)])]
+    .forEach(c=>{const o=el("option");o.value=c;dl.appendChild(o);});
+  catWrap.appendChild(catIn);catWrap.appendChild(dl);body.appendChild(catWrap);
+  body.appendChild(fld("Cost per case ($)",inputEl("e-cost",i.cost!=null?i.cost:"","e.g. 41.44",true)));
+  body.appendChild(el("div","note","Category groups items within a supplier (e.g. Performance → Dry / Refrigerated / Frozen). Cost per case can change with the market — update it anytime here or with the $ button on the stock list."));
+
+  // auto-lookup name when arriving from a top-level scan with empty name
+  if(!id&&prefill&&prefill.barcode&&prefill.lookup){
+    (async()=>{const nm=await lookupProduct(prefill.barcode);
+      const nameEl=overlay.querySelector("#e-name");
+      if(nm&&nameEl&&!nameEl.value.trim()){nameEl.value=nm;toast("Found: "+nm);}})();
+  }
+
+  overlay.querySelector(".ed-save").onclick=()=>{
+    const name=overlay.querySelector("#e-name").value.trim();
+    if(!name){toast("Name it first");return;}
+    i.name=name;
+    i.barcode=overlay.querySelector("#e-barcode").value.trim();
+    i.unit=overlay.querySelector("#e-unit").value.trim()||"each";
+    i.supplier=sup.value==="__other"?(S.settings.suppliers[0]||"Other"):sup.value;
+    i.pack=Number(overlay.querySelector("#e-pack").value)||1;
+    i.onHand=Number(overlay.querySelector("#e-onhand").value)||0;
+    i.orderCode=overlay.querySelector("#e-ordercode").value.trim();
+    i.category=overlay.querySelector("#e-cat").value.trim();
+    const cv=overlay.querySelector("#e-cost").value.trim();i.cost=cv===""?null:Number(cv);
+    if(!id)S.ingredients.push(i);
+    save();closeEditor(overlay);renderInv();renderOrder();renderMenu();
+  };
+}
+
+function inputEl(id,val,ph,num){const i=el("input","input");i.id=id;i.value=val!=null?val:"";i.placeholder=ph||"";if(num){i.type="number";i.inputMode="decimal";i.step="any";i.min="0";}return i;}
+
+/* ---------- Import stock items ---------- */
+const INVOICE_PFG=[
+  {orderCode:"897414",name:"SLVR SRC OIL SOY CLR FRY TFF",pack:1,unit:"35 LB",cost:40.04,category:"Dry"},
+  {orderCode:"863494",name:"WEST CRK CORN WHL KERNEL",pack:6,unit:"#10 CN",cost:35.79,category:"Dry"},
+  {orderCode:"201346",name:"WEST CRK MAYO WHL EGG GF",pack:4,unit:"1 GA",cost:54.02,category:"Dry"},
+  {orderCode:"201325",name:"WEST CRK DRESSING COLESLAW TFF",pack:4,unit:"1 GA",cost:52.34,category:"Dry"},
+  {orderCode:"315364",name:"BUCCANEE JUG GA TEA W/RED SAFETY L",pack:1,unit:"24 CT",cost:26.18,category:"Dry"},
+  {orderCode:"158756",name:"WEST CRK CHICKEN WING 1ST & 2ND ME",pack:4,unit:"10 LB",cost:54.99,category:"Refrigerated"},
+  {orderCode:"852023",name:"WEST CRK CHICKEN DRUMSTICK CVP",pack:2,unit:"20 LB",cost:32.95,category:"Refrigerated"},
+  {orderCode:"887556",name:"SLVR SRC CHICKEN BRST B/S MAR JUMB",pack:4,unit:"10 LB",cost:71.96,category:"Refrigerated"},
+  {orderCode:"416250",name:'LUIGI FRIES 3/8" REG CUT CLR CO',pack:6,unit:"4.5 LB",cost:41.44,category:"Frozen"},
+  {orderCode:"649320",name:"ST CLAIR MACARONI & CHEESE WHI CHE",pack:4,unit:"4 LB",cost:55.66,category:"Frozen"},
+].map(x=>({...x,supplier:"Performance (PFG)"}));
+
+const INVOICE_SYSCO=[
+  {orderCode:"2105815",name:"WHLFCLS EGG SHELL MED GR AA USDA WHT",pack:1,unit:"15 DZ",cost:13.95,category:"Dairy"},
+  {orderCode:"7284079",name:"BONCHON BEEF PRM BULGOGI",pack:1,unit:"15 LB",cost:182.80,category:"Meats"},
+  {orderCode:"7463818",name:"BONCHON PORK & CHS TONKATSU FRTTR",pack:1,unit:"15 LB",cost:99.48,category:"Meats"},
+  {orderCode:"2336375",name:"AMOY BUN PLAIN BAO FLD BTRFLY SHPD",pack:6,unit:"24 CT",cost:56.85,category:"Frozen"},
+  {orderCode:"3855566",name:"ROLLPIN DONUT YEAST RAISED PREM TWIST",pack:1,unit:"82.75 OZ",cost:37.47,category:"Frozen"},
+  {orderCode:"7055188",name:"BKRSIMP BUN HAMBURGER BRIOCHE 4IN",pack:1,unit:"12 CT",cost:34.55,category:"Frozen"},
+  {orderCode:"7111731",name:"CHEFONE APTZR POTSTICKER EDAMAME",pack:1,unit:"500.8 OZ",cost:44.13,category:"Frozen"},
+  {orderCode:"7282599",name:"AMOYROY POTSTICKER PORK & VEG .9OZ",pack:6,unit:"30 PC",cost:44.69,category:"Frozen"},
+  {orderCode:"7322572",name:"PIMUONE CORN DOG KOREAN",pack:1,unit:"84 EA",cost:99.05,category:"Frozen"},
+  {orderCode:"9803594",name:"SYS CLS SOYBEAN WHOLE IN POD EDAMAME",pack:6,unit:"4 LB",cost:83.23,category:"Canned & Dry"},
+  {orderCode:"2451417",name:"HUYFONG SAUCE CHILI HOT SRIRACHA",pack:12,unit:"28 OZ",cost:55.36,category:"Canned & Dry"},
+  {orderCode:"4239851",name:"KIKOMAN SAUCE SOY PACKET",pack:200,unit:".5 OZ",cost:12.82,category:"Canned & Dry"},
+  {orderCode:"4274981",name:"SYS REL KETCHUP PACKET FOIL",pack:1000,unit:"7 GM",cost:31.07,category:"Canned & Dry"},
+  {orderCode:"4782694",name:"SYS CLS SUGAR GRANULATED XFINE CANE",pack:1,unit:"50 LB",cost:41.07,category:"Canned & Dry"},
+  {orderCode:"5848072",name:"JDMTCLS RICE 103 LONG GRAIN",pack:1,unit:"50 LB",cost:25.66,category:"Canned & Dry"},
+].map(x=>({...x,supplier:"Sysco"}));
+
+const INVOICE_ASIANFRESH=[
+  {orderCode:"",name:"Daikon",pack:1,unit:"case",cost:36.00,category:"Produce"},
+  {orderCode:"",name:"Ramune Strawberry",pack:1,unit:"case",cost:36.50,category:"Beverage"},
+  {orderCode:"",name:"Ramune Peach",pack:1,unit:"case",cost:36.50,category:"Beverage"},
+  {orderCode:"",name:"Surasang Sanuki Noodles - Frozen",pack:8,unit:"2.2 LB",cost:36.00,category:"Frozen"},
+  {orderCode:"",name:"Wang Fish Cake - Square Type",pack:1,unit:"each",cost:8.00,category:"Frozen"},
+].map(x=>({...x,supplier:"Asian Fresh Market"}));
+
+function importItems(items){
+  let added=0,updated=0;
+  items.forEach(it=>{
+    const code=(it.orderCode||"").trim();
+    const sup=(it.supplier||"Performance (PFG)").trim();
+    if(sup&&!S.settings.suppliers.includes(sup))S.settings.suppliers.push(sup);
+    let ex=code?S.ingredients.find(x=>(x.orderCode||"").trim().toLowerCase()===code.toLowerCase()):null;
+    if(!ex&&it.name)ex=S.ingredients.find(x=>x.name.trim().toLowerCase()===it.name.trim().toLowerCase()&&x.supplier===sup);
+    if(ex){
+      if(it.name)ex.name=it.name;if(it.unit)ex.unit=it.unit;
+      if(Number(it.pack))ex.pack=Number(it.pack);
+      if(it.cost!=null&&it.cost!=="")ex.cost=Number(it.cost);
+      if(it.category)ex.category=it.category;
+      if(code)ex.orderCode=code;ex.supplier=sup;updated++;
+    }else{
+      S.ingredients.push({id:uid(),name:it.name||"(unnamed)",unit:it.unit||"each",supplier:sup,
+        pack:Number(it.pack)||1,onHand:Number(it.onHand)||0,orderCode:code,barcode:"",
+        cost:(it.cost!=null&&it.cost!=="")?Number(it.cost):null,category:it.category||""});
+      added++;
+    }
+  });
+  save();
+  return {added,updated};
+}
+
+function parseItemsText(text){
+  const rows=parseCSV(text);if(!rows.length)return[];
+  const hdr=rows[0].map(h=>(h||"").trim().toLowerCase());
+  const hasHeader=hdr.some(h=>/item|desc|pack|size|price|cost|supplier|vendor|name/.test(h));
+  let map={item:0,desc:1,pack:2,size:3,price:4,sup:5},data=rows;
+  if(hasHeader){
+    const find=(...keys)=>{for(let i=0;i<hdr.length;i++)if(keys.some(k=>hdr[i].includes(k)))return i;return -1;};
+    map={item:find("item","supc","code","#"),desc:find("desc","name","product"),pack:find("pack"),
+         size:find("size","unit"),price:find("price","cost"),sup:find("supplier","vendor"),cat:find("categ","group","section")};
+    data=rows.slice(1);
+  }
+  const g=(r,i)=>i>=0?(r[i]||"").trim():"";
+  return data.map(r=>({
+    orderCode:g(r,map.item),
+    name:g(r,map.desc),
+    pack:Number(g(r,map.pack).replace(/[^0-9.]/g,""))||1,
+    unit:g(r,map.size)||"each",
+    cost:(()=>{const v=g(r,map.price).replace(/[^0-9.]/g,"");return v?Number(v):null;})(),
+    supplier:g(r,map.sup)||"Performance (PFG)",
+    category:g(r,map.cat)
+  })).filter(x=>x.name||x.orderCode);
+}
+
+function openItemImport(){
+  const ov=editorShell("Import items");
+  const body=ov.querySelector(".ed-body");
+  body.appendChild(el("div","note","Quick-load the items from a distributor invoice, or paste your own list below."));
+  const quick=el("button","btn ember","⤓ Load Performance invoice (10 items)");
+  quick.onclick=()=>{const r=importItems(INVOICE_PFG);closeEditor(ov);renderInv();renderOrder();renderData();go("inv");toast("Imported "+r.added+" new"+(r.updated?", updated "+r.updated:""));};
+  body.appendChild(quick);
+  const quickS=el("button","btn ember","⤓ Load Sysco invoice (15 items)");quickS.style.marginTop="9px";
+  quickS.onclick=()=>{const r=importItems(INVOICE_SYSCO);closeEditor(ov);renderInv();renderOrder();renderData();go("inv");toast("Imported "+r.added+" new"+(r.updated?", updated "+r.updated:""));};
+  body.appendChild(quickS);
+  const quickA=el("button","btn ember","⤓ Load Asian Fresh Market (5 items)");quickA.style.marginTop="9px";
+  quickA.onclick=()=>{
+    const r=importItems(INVOICE_ASIANFRESH);
+    if(!S.settings.supplierInfo["Asian Fresh Market"])S.settings.supplierInfo["Asian Fresh Market"]={account:"",url:"",email:"asianfreshsupermarket@gmail.com",cutoff:"Local vendor — email the order"};
+    save();closeEditor(ov);renderInv();renderOrder();renderData();go("inv");toast("Imported "+r.added+" new"+(r.updated?", updated "+r.updated:""));};
+  body.appendChild(quickA);
+  body.appendChild(el("div","divider"));
+  body.appendChild(el("div","small-label","Or paste a list"));
+  const ta=el("textarea","input");ta.id="imp-text";
+  ta.placeholder="item,description,pack,size,price\n416250,Luigi Fries,6,4.5 LB,41.44";
+  body.appendChild(ta);
+  body.appendChild(el("div","note","One item per line. A header row is optional (item, description, pack, size, price, supplier). No supplier given defaults to Performance (PFG)."));
+  const result=el("div");result.id="imp-result";body.appendChild(result);
+  const sv=ov.querySelector(".ed-save");sv.textContent="Preview pasted items";
+  sv.onclick=()=>previewItemImport(ta.value,ov);
+}
+
+function previewItemImport(text,ov){
+  const items=parseItemsText(text);
+  const res=ov.querySelector("#imp-result");res.innerHTML="";
+  if(!items.length){toast("Nothing to read from that");return;}
+  const card=el("div","card");
+  card.innerHTML=`<div class="small-label" style="margin-top:0">${items.length} item${items.length>1?"s":""} ready</div>`+
+    items.map(it=>`<div class="desc">${it.orderCode?`<b>${it.orderCode}</b> · `:""}${it.name||"(no name)"} <span style="color:var(--faint)">(${it.pack}× ${it.unit}${it.cost!=null?" · "+money(it.cost):""}) · ${it.supplier}</span></div>`).join("");
+  res.appendChild(card);
+  const add=el("button","btn green","Add / update "+items.length+" item"+(items.length>1?"s":""));
+  add.onclick=()=>{const r=importItems(items);closeEditor(ov);renderInv();renderOrder();renderData();go("inv");toast("Imported "+r.added+" new"+(r.updated?", updated "+r.updated:""));};
+  res.appendChild(add);
+}
+
+/* ---------- Barcode scanner ---------- */
+async function openScanner(onResult){
+  const ov=el("div","scanner");
+  ov.innerHTML=`
+    <div class="scan-top">
+      <button class="iconbtn scan-x">✕</button>
+      <div class="scan-title">Scan barcode</div>
+      <button class="iconbtn scan-torch" style="visibility:hidden">🔦</button>
+    </div>
+    <div class="scan-stage">
+      <video class="scan-video" playsinline muted></video>
+      <div class="scan-frame"><span></span><span></span><span></span><span></span></div>
+      <div class="scan-hint">Point the rear camera at the barcode</div>
+    </div>
+    <div class="scan-bottom">
+      <div class="scan-manual">
+        <input class="input scan-manualinput" inputmode="numeric" placeholder="Or type the barcode number">
+        <button class="btn ember sm scan-manualgo">Use</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const video=ov.querySelector(".scan-video");
+  let stream=null,raf=null,done=false;
+  function stop(){if(raf)cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());}
+  function finish(code){if(done)return;done=true;stop();if(navigator.vibrate)navigator.vibrate(55);ov.remove();onResult&&onResult(String(code).trim());}
+  ov.querySelector(".scan-x").onclick=()=>{stop();ov.remove();};
+  ov.querySelector(".scan-manualgo").onclick=()=>{const v=ov.querySelector(".scan-manualinput").value.trim();if(v)finish(v);};
+  ov.querySelector(".scan-manualinput").addEventListener("keydown",e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v)finish(v);}});
+
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+    video.srcObject=stream;await video.play();
+  }catch(err){
+    ov.querySelector(".scan-hint").textContent="Camera unavailable — type the barcode number below.";
+    ov.querySelector(".scan-frame").style.display="none";
+    return;
+  }
+
+  // torch toggle, where supported
+  try{
+    const track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities&&track.getCapabilities();
+    if(caps&&caps.torch){
+      const tb=ov.querySelector(".scan-torch");tb.style.visibility="visible";tb.style.opacity=.5;let on=false;
+      tb.onclick=()=>{on=!on;track.applyConstraints({advanced:[{torch:on}]}).catch(()=>{});tb.style.opacity=on?1:.5;};
+    }
+  }catch(e){}
+
+  if("BarcodeDetector" in window){
+    let detector;
+    try{
+      const want=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","codabar","itf"];
+      const sup=await window.BarcodeDetector.getSupportedFormats();
+      const fmts=sup.filter(f=>want.includes(f));
+      detector=fmts.length?new window.BarcodeDetector({formats:fmts}):new window.BarcodeDetector();
+    }catch(e){try{detector=new window.BarcodeDetector();}catch(e2){detector=null;}}
+    if(detector){
+      const tick=async()=>{
+        if(done)return;
+        try{const codes=await detector.detect(video);if(codes&&codes.length){finish(codes[0].rawValue);return;}}catch(e){}
+        raf=requestAnimationFrame(tick);
+      };
+      raf=requestAnimationFrame(tick);
+    }else manualOnly();
+  }else manualOnly();
+  function manualOnly(){
+    ov.querySelector(".scan-hint").textContent="This browser can't auto-read codes — type the number below, or open in Chrome on Android.";
+  }
+}
+
+/* Optional product-name lookup (needs internet; food items via Open Food Facts) */
+async function lookupProduct(code){
+  try{
+    const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),6000);
+    const r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,brands",{signal:ctrl.signal});
+    clearTimeout(t);
+    const j=await r.json();
+    if(j&&j.status===1&&j.product){
+      const p=j.product;const nm=[p.brands,p.product_name].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+      return nm||null;
+    }
+  }catch(e){}
+  return null;
+}
+
+/* ---- Editor shell ---- */
+function editorShell(title){
+  const ov=el("div");
+  ov.style.cssText="position:fixed;inset:0;z-index:60;background:rgba(8,6,5,.7);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center";
+  const sheet=el("div");
+  sheet.style.cssText="background:var(--base);border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:560px;max-height:90vh;overflow:auto;padding:20px 18px calc(20px + env(safe-area-inset-bottom));animation:fade .2s";
+  sheet.innerHTML=`<div class="row between" style="margin-bottom:16px"><h3 style="font-size:19px">${title}</h3><button class="iconbtn ed-close">✕</button></div><div class="ed-body"></div>`;
+  const save=el("button","btn ember ed-save","Save");save.style.marginTop="14px";
+  sheet.appendChild(save);
+  ov.appendChild(sheet);document.body.appendChild(ov);
+  ov.querySelector(".ed-close").onclick=()=>closeEditor(ov);
+  ov.onclick=e=>{if(e.target===ov)closeEditor(ov);};
+  return ov;
+}
+function closeEditor(ov){ov.remove();}
+
+/* ---- Data / Setup ---- */
+function renderData(){
+  const box=$("#data-body");box.innerHTML="";
+  const c=el("div","card");
+  c.innerHTML=`<div class="small-label" style="margin-top:0">Ordering math</div>`;
+  c.appendChild(fld("Order cycle (days you order for)",inputEl("set-cycle",S.settings.cycleDays,"7",true)));
+  c.appendChild(fld("Safety buffer (extra days of stock)",inputEl("set-safety",S.settings.safetyDays,"2",true)));
+  const sb=el("button","btn green sm","Save math");sb.style.width="100%";
+  sb.onclick=()=>{S.settings.cycleDays=Number($("#set-cycle").value)||7;S.settings.safetyDays=Number($("#set-safety").value)||0;save();toast("Updated");renderOrder();};
+  c.appendChild(sb);
+  box.appendChild(c);
+
+  // Suppliers & ordering channels
+  const supCard=el("div","card");
+  supCard.innerHTML=`<div class="small-label" style="margin-top:0">Suppliers &amp; ordering</div>
+    <div class="note" style="margin-top:0">Set each distributor's portal link, rep email, account number and cutoff. These power the Email rep / Open portal buttons on a purchase order.</div>`;
+  const supList=[...new Set([...S.settings.suppliers,...S.ingredients.map(i=>i.supplier)].filter(Boolean))];
+  supList.forEach((name,idx)=>{
+    const inf=supplierInfo(name);
+    const blk=el("div");blk.style.cssText="border-top:1px solid var(--line);margin-top:12px;padding-top:14px";
+    blk.appendChild(el("div","title","")).textContent=name;
+    blk.lastChild.style.cssText="font-size:15px;margin-bottom:8px";
+    blk.appendChild(fld("Order portal URL",inputEl("supurl"+idx,inf.url||"","shop.sysco.com")));
+    blk.appendChild(fld("Rep email",inputEl("supemail"+idx,inf.email||"","rep@distributor.com")));
+    const gg=el("div","grid2");
+    gg.appendChild(fld("Account #",inputEl("supacct"+idx,inf.account||"","")));
+    gg.appendChild(fld("Cutoff",inputEl("supcut"+idx,inf.cutoff||"","Tue/Fri 3 PM")));
+    blk.appendChild(gg);
+    supCard.appendChild(blk);
+  });
+  const saveSup=el("button","btn green sm","Save suppliers");saveSup.style.width="100%";saveSup.style.marginTop="14px";
+  saveSup.onclick=()=>{
+    supList.forEach((name,idx)=>{
+      S.settings.supplierInfo[name]={
+        url:$("#supurl"+idx).value.trim(),
+        email:$("#supemail"+idx).value.trim(),
+        account:$("#supacct"+idx).value.trim(),
+        cutoff:$("#supcut"+idx).value.trim()
+      };
+    });
+    save();toast("Suppliers saved");renderOrder();
+  };
+  supCard.appendChild(saveSup);
+  box.appendChild(supCard);
+
+  // Sync from Aloha (cloud link)
+  const syncCard=el("div","card");
+  syncCard.innerHTML=`<div class="small-label" style="margin-top:0">Sync sales from Aloha</div>
+    <div class="note" style="margin-top:0">Your Aloha PC drops the day's sales into a cloud folder (Google Drive / Dropbox); paste that file's link here. Then anyone with the app can pull it in from anywhere with one tap.</div>`;
+  syncCard.appendChild(fld("Sync link (URL)",inputEl("sync-url",S.settings.syncUrl||"","https://… link to today's sales file")));
+  const toggles=el("div");
+  const mkToggle=(id,label,on)=>{
+    const w=el("label","row between");w.style.cssText="padding:9px 0;cursor:pointer";
+    w.innerHTML=`<span style="font-size:14px">${label}</span>`;
+    const cb=el("input");cb.type="checkbox";cb.id=id;cb.checked=!!on;cb.style.cssText="width:20px;height:20px;accent-color:var(--ember1)";
+    w.appendChild(cb);return w;
+  };
+  toggles.appendChild(mkToggle("sync-auto","Auto-sync when I open the app",S.settings.syncAuto));
+  toggles.appendChild(mkToggle("sync-deduct","Also deduct from stock on sync",S.settings.syncDeduct));
+  syncCard.appendChild(toggles);
+  const syncBtns=el("div","btn-row");syncBtns.style.marginTop="6px";
+  syncBtns.innerHTML=`<button class="btn green sm" id="sync-save">Save</button><button class="btn ember sm" id="sync-now">⟳ Sync now</button>`;
+  syncCard.appendChild(syncBtns);
+  if(S.settings.syncLast){
+    const d=new Date(S.settings.syncLast);
+    syncCard.appendChild(el("div","note","Last synced: "+d.toLocaleString()));
+  }
+  box.appendChild(syncCard);
+  $("#sync-save").onclick=()=>{
+    S.settings.syncUrl=$("#sync-url").value.trim();
+    S.settings.syncAuto=$("#sync-auto").checked;
+    S.settings.syncDeduct=$("#sync-deduct").checked;
+    save();toast("Sync settings saved");
+  };
+  $("#sync-now").onclick=()=>{
+    S.settings.syncUrl=$("#sync-url").value.trim();
+    S.settings.syncAuto=$("#sync-auto").checked;
+    S.settings.syncDeduct=$("#sync-deduct").checked;
+    save();syncFromAloha(true);
+  };
+
+  // Email sending (admin)
+  const E=S.settings.email||{};
+  const emailCard=el("div","card");
+  emailCard.innerHTML=`<div class="small-label" style="margin-top:0">Email orders (admin)</div>
+    <div class="note" style="margin-top:0">Send purchase orders straight from the app. Pick how:</div>`;
+  const methWrap=el("label","fld");methWrap.innerHTML="<span>Send method</span>";
+  const meth=el("select","input");meth.id="email-method";
+  [["mailto","Open my phone's mail app (no setup)"],["relay","Send through my email — automatic (recommended)"],["emailjs","Send via EmailJS"]].forEach(([v,l])=>{
+    const o=el("option",null,l);o.value=v;if((E.method||"mailto")===v)o.selected=true;meth.appendChild(o);});
+  methWrap.appendChild(meth);emailCard.appendChild(methWrap);
+
+  // RELAY fields — your email login lives in the relay program (set up once)
+  const rly=el("div");rly.id="rly-fields";rly.style.display=(E.method==="relay")?"block":"none";
+  rly.appendChild(el("div","note","This sends through your own email automatically. Run the little relay program (mail-relay.js) once with your email login in it, paste its web address below, and orders send straight from the app — you never open email."));
+  rly.appendChild(fld("Relay web address (URL)",inputEl("rly-url",E.relayUrl||"","https://your-relay.onrender.com/send")));
+  rly.appendChild(fld("Relay secret key",inputEl("rly-key",E.relayKey||"","the KEY you set in the relay")));
+  rly.appendChild(fld("From name",inputEl("rly-from",E.fromName||"Bonchon Rogers","Bonchon Rogers")));
+  rly.appendChild(fld("Reply-to email",inputEl("rly-reply",E.replyTo||"","manager@…")));
+  rly.appendChild(fld("Send me a copy (CC)",inputEl("rly-cc",E.cc||"","owner@…  (optional)")));
+  emailCard.appendChild(rly);
+
+  const ejs=el("div");ejs.id="ejs-fields";ejs.style.display=(E.method==="emailjs")?"block":"none";
+  ejs.appendChild(el("div","note","One-time setup: make a free account at emailjs.com, connect your Gmail, create a template, then paste its 3 IDs here. Your template should use the variables: <b>to_email</b>, <b>subject</b>, <b>message</b>, <b>from_name</b>, <b>reply_to</b>."));
+  ejs.appendChild(fld("EmailJS Service ID",inputEl("ejs-service",E.serviceId||"","service_xxxxxxx")));
+  ejs.appendChild(fld("EmailJS Template ID",inputEl("ejs-template",E.templateId||"","template_xxxxxxx")));
+  ejs.appendChild(fld("EmailJS Public Key",inputEl("ejs-key",E.publicKey||"","xxxxxxxxxxxxxx")));
+  ejs.appendChild(fld("From name",inputEl("ejs-from",E.fromName||"Bonchon Rogers","Bonchon Rogers")));
+  ejs.appendChild(fld("Reply-to email (where vendors reply)",inputEl("ejs-reply",E.replyTo||"","manager@…")));
+  ejs.appendChild(fld("Send me a copy (CC)",inputEl("ejs-cc",E.cc||"","owner@…  (optional)")));
+  emailCard.appendChild(ejs);
+  meth.onchange=()=>{rly.style.display=meth.value==="relay"?"block":"none";ejs.style.display=meth.value==="emailjs"?"block":"none";};
+
+  const ebtns=el("div","btn-row");ebtns.style.marginTop="6px";
+  ebtns.innerHTML=`<button class="btn green sm" id="email-save">Save</button><button class="btn ghost sm" id="email-test">✉ Send test</button>`;
+  emailCard.appendChild(ebtns);
+  box.appendChild(emailCard);
+  const val=(id,fallback)=>{const n=$(id);return n?n.value.trim():fallback;};
+  const collectEmail=()=>{
+    const m=$("#email-method").value;
+    S.settings.email={method:m,
+      serviceId:val("#ejs-service",E.serviceId||""),
+      templateId:val("#ejs-template",E.templateId||""),
+      publicKey:val("#ejs-key",E.publicKey||""),
+      relayUrl:val("#rly-url",E.relayUrl||""),
+      relayKey:val("#rly-key",E.relayKey||""),
+      fromName:(m==="relay"?val("#rly-from",E.fromName||"Bonchon Rogers"):val("#ejs-from",E.fromName||"Bonchon Rogers")),
+      replyTo:(m==="relay"?val("#rly-reply",E.replyTo||""):val("#ejs-reply",E.replyTo||"")),
+      cc:(m==="relay"?val("#rly-cc",E.cc||""):val("#ejs-cc",E.cc||""))};
+    save();
+  };
+  $("#email-save").onclick=()=>{collectEmail();toast("Email settings saved");};
+  $("#email-test").onclick=async()=>{
+    collectEmail();
+    if(!emailConfigured()){toast("Pick a send method and fill it in first");return;}
+    const to=S.settings.email.replyTo||prompt("Send test email to:");
+    if(!to)return;
+    toast("Sending test…");
+    const r=await sendEmailDirect(to,"ROGERS - BONCHON ORDER (test)","This is a test from the Bonchon app. If you got this, automatic email sending is working.");
+    toast(r.ok?"Test sent to "+to:"Test failed — check your settings");
+  };
+  const b=el("div","card");
+  b.innerHTML=`<div class="small-label" style="margin-top:0">Backup &amp; restore</div>
+    <div class="note" style="margin-top:0">Your data lives only on this device. Export a backup before clearing the app or switching phones.</div>`;
+  const br=el("div","btn-row");br.style.marginTop="12px";
+  br.innerHTML=`<button class="btn ghost" id="exp">⭳ Export backup</button><button class="btn ghost" id="imp">⭱ Restore</button>`;
+  b.appendChild(br);box.appendChild(b);
+
+  // App updates
+  const up=el("div","card");
+  up.innerHTML=`<div class="small-label" style="margin-top:0">App version &amp; updates</div>
+    <div class="note" style="margin-top:0">This device is on version <b>${APP_VERSION}</b>. Tap below to pull the latest version from your host. Your saved data stays on this device.</div>`;
+  const ub=el("button","btn ember","↻ Check for updates");ub.style.cssText="width:100%;margin-top:10px";
+  ub.onclick=()=>{
+    if(!confirm("Reload the app to get the newest version? Your data stays saved."))return;
+    toast("Updating…");
+    location.href=location.origin+location.pathname+"?u="+Date.now();
+  };
+  up.appendChild(ub);box.appendChild(up);
+
+  const inst=el("div","card");
+  inst.innerHTML=`<div class="small-label" style="margin-top:0">Install on your phone</div>
+    <div class="note" style="margin-top:0"><b>iPhone:</b> Share → Add to Home Screen.<br><b>Android:</b> Chrome menu (⋮) → Add to Home screen / Install app. It then opens full-screen like an app and works offline.</div>`;
+  box.appendChild(inst);
+
+  if(currentRole==="manager"){
+    const pins=el("div","card");
+    const p=S.settings.pins||{associate:"1144",manager:"8800"};
+    pins.innerHTML=`<div class="small-label" style="margin-top:0">Access PINs (manager only)</div>
+      <div class="note" style="margin-top:0">The PIN entered at login sets the role. Associates get Order, Sales, Menu and Stock; managers also get Register and Setup. Keep these 4 digits.</div>
+      <label class="fld"><span>Associate PIN</span><input id="pin-assoc" inputmode="numeric" maxlength="4" value="${p.associate||""}"></label>
+      <label class="fld"><span>Manager PIN</span><input id="pin-mgr" inputmode="numeric" maxlength="4" value="${p.manager||""}"></label>
+      <div class="btn-row"><button class="btn" id="pin-save">Save PINs</button></div>`;
+    box.appendChild(pins);
+    $("#pin-save").onclick=()=>{
+      const a=($("#pin-assoc").value||"").trim(), m=($("#pin-mgr").value||"").trim();
+      if(!/^\d{4}$/.test(a)||!/^\d{4}$/.test(m))return toast("Each PIN must be exactly 4 digits");
+      if(a===m)return toast("Associate and manager PINs must be different");
+      S.settings.pins={associate:a,manager:m};save();toast("PINs updated");
+    };
+  }
+
+  const danger=el("div","card");
+  danger.innerHTML=`<div class="small-label" style="margin-top:0">Reset</div>`;
+  const dr=el("div","btn-row");
+  dr.innerHTML=`<button class="btn ghost" id="reseed">↻ Reset to item catalog</button><button class="btn danger" id="wipe">Clear all data</button>`;
+  danger.appendChild(dr);box.appendChild(danger);
+
+  $("#exp").onclick=exportData;
+  $("#imp").onclick=importData;
+  $("#reseed").onclick=()=>{if(confirm("Reset your inventory to the full Sysco + Performance item catalog? This replaces current stock, recipes and sales.")){seedSampleFull();renderAll();go("inv");toast("Item catalog loaded");}};
+  $("#wipe").onclick=()=>{if(confirm("Erase all menu, stock and sales on this device? This can't be undone.")){localStorage.removeItem(KEY);S=blank();renderAll();go("order");toast("Cleared");}};
+}
+
+function blank(){return JSON.parse(JSON.stringify(DEFAULTS));}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  download(blob,"bonchon-inventory-backup-"+todayStr()+".json");toast("Backup downloaded");
+}
+function importData(){
+  const inp=el("input");inp.type="file";inp.accept=".json,application/json";
+  inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();
+    fr.onload=()=>{try{S=migrate(JSON.parse(fr.result));save();renderAll();go("order");toast("Restored");}catch(err){toast("Couldn't read that file");}};
+    fr.readAsText(f);};
+  inp.click();
+}
+function csvOrder(lines){
+  let csv="Supplier,Item,Cases,Units to order,Unit,On hand,Avg daily use\n";
+  lines.forEach(l=>{csv+=[l.supplier,l.name,l.cases,fmt(l.orderUnits),l.unit,fmt(l.onHand),fmt(l.avgDaily)].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")+"\n";});
+  download(new Blob([csv],{type:"text/csv"}),"bonchon-order-"+todayStr()+".csv");toast("CSV downloaded");
+}
+function copyOrder(groups){
+  let t="Bonchon order — "+todayStr()+"\n";
+  Object.entries(groups).forEach(([sup,lines])=>{
+    t+="\n"+sup+":\n";
+    lines.forEach(l=>{t+=`  • ${l.name} — ${l.cases} case${l.cases>1?"s":""} (${fmt(l.orderUnits)} ${l.unit})\n`;});
+  });
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast("Order copied"),()=>fallbackCopy(t));}
+  else fallbackCopy(t);
+}
+function fallbackCopy(t){const ta=el("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("Order copied");}catch(e){toast("Copy not supported");}ta.remove();}
+function download(blob,name){const a=el("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
+/* ---- Load the clean item catalog ---- */
+function seedSampleFull(){
+  seedSample();
+}
+
+/* ---------- Navigation ---------- */
+const MANAGER_ONLY=["register","data"];
+function go(name){
+  if(currentRole!=="manager" && MANAGER_ONLY.includes(name)) name="order";
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  $("#view-"+name).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===name));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.nav));
+
+/* ---- PIN login ---- */
+let currentRole=null, lockEntry="";
+function applyRole(){
+  document.querySelectorAll("nav button").forEach(b=>{
+    const restricted=MANAGER_ONLY.includes(b.dataset.nav);
+    b.style.display=(restricted && currentRole!=="manager")?"none":"";
+  });
+}
+function lockDots(){document.querySelectorAll(".lock-dots span").forEach((d,i)=>d.classList.toggle("on",i<lockEntry.length));}
+function lock(){currentRole=null;lockEntry="";lockDots();$("#lock-sub").textContent="Enter PIN";$("#lock-sub").classList.remove("err");$("#lockscreen").classList.remove("hidden");}
+function tryUnlock(){
+  const p=S.settings.pins||{};
+  if(lockEntry===String(p.manager)){currentRole="manager";}
+  else if(lockEntry===String(p.associate)){currentRole="associate";}
+  else{$("#lock-sub").textContent="Wrong PIN — try again";$("#lock-sub").classList.add("err");lockEntry="";lockDots();return;}
+  $("#lockscreen").classList.add("hidden");
+  applyRole();go("order");
+  toast(currentRole==="manager"?"Manager mode":"Associate mode");
+}
+document.querySelectorAll(".lock-pad button").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.k;
+  if(k==="clear"){lockEntry="";}
+  else if(k==="back"){lockEntry=lockEntry.slice(0,-1);}
+  else if(lockEntry.length<4){lockEntry+=k;}
+  $("#lock-sub").classList.remove("err");$("#lock-sub").textContent="Enter PIN";
+  lockDots();
+  if(lockEntry.length===4) setTimeout(tryUnlock,120);
+});
+$("#hdr-lock").onclick=lock;
+$("#add-menu").onclick=()=>menuEditor(null);
+const MENU_BONCHON=["12 Wings + 6 Drums (KM)","Bao Buns","Bibim BULGOGI","Bibimbap","Boneless 10","Boneless 6","Bubly Blackberry","Bulgogi","Bulgogi Fries","Bulgogi Fries (Seoul)","Cherry Pepsi- Fountain","Cherry Pepsi-Btl","Chicken Katsu","Chicken Soy Garlic","Chicken Spicy","Coleslaw","Diet Pepsi Btl","Drums 10","Drums 5","Drums 8","Fountain Soda-Unlimted","FRIED CHICK SOY","Fried Chicken","Fried Rice (KM)","Fried Zucchini","House Fried Rice","Japchae","K-Chicken Sandwich","K-Meal 4-6 PPL","Kid Fries","Kid's Meal - Strips","Korean Cucumber Salad","Korean Donuts & Sauce (1)","Korean Donuts & Sauce (2)","Korean Street Corn","Korean Tacos","Mixed 4 Wings + 2 Drums","Mixed 6 Wings + 2 Drums","Mixed 8 Wings + 4 Drums","MoPo Corndog","Mountain Dew- Fountain","Onion Rings","Peach Ramune","Pepsi ZERO-btl","Pepsi- Fountain","Pepsi-Btl","Pickled Radish","Pork Cheese Katsu Bowl","Pork Cheese Katsu Sand","Pork Potstickers 4","Pork Potstickers 8","Prm Seasn Fries","Regular French Fries","Root Beer-Btl","Sapporo SM Can 12oz","Seasoned Fried Zucchini","Seasoned Fries","Seoul Sampler","Sotteok Sotteok","Steamed Rice","Strawberry Ramune","Street Corn (KM)","Strips 10","Strips 5","Strips 8","Sweet Potato Waffle Fries","Udon","Udon BULGOGI","Unsweet Tea Pure Leaf BTL","Veg Potstickers 8","White Rice","Wings 10","Wings 30","Wings 6","YumDrum Trio Meal"];
+function importMenu(names){
+  let added=0;
+  names.forEach(nm=>{
+    if(S.menu.some(m=>norm(m.name)===norm(nm)))return;
+    S.menu.push({id:uid(),name:nm,recipe:[]});added++;
+  });
+  save();return added;
+}
+$("#load-menu").onclick=()=>{
+  const added=importMenu(MENU_BONCHON);
+  renderMenu();renderSalesEnter();renderOrder();
+  toast(added?"Added "+added+" menu items":"Menu already loaded");
+};
+$("#clear-menu").onclick=()=>{
+  if(!S.menu.length){toast("Menu is already empty");return;}
+  if(!confirm("Erase all "+S.menu.length+" menu items? (Sales history and inventory are not affected.)"))return;
+  S.menu=[];save();renderMenu();renderSalesEnter();renderOrder();
+  toast("Menu cleared — ready for your Aloha import");
+};
+$("#import-menu").onclick=()=>{
+  const ov=editorShell("Import menu");
+  const body=ov.querySelector(".ed-body");
+  body.appendChild(el("div","note","Paste your menu items from Aloha — one item name per line. If you paste a CSV or report, the app takes the item name from the first column. Lines that look like headers, totals, or prices are skipped. Existing items aren't duplicated."));
+  const ta=el("textarea","input");ta.id="menu-text";ta.style.minHeight="160px";
+  ta.placeholder="Soy Garlic Wings\nSpicy Wings\nBibimbap\nBulgogi Rice Bowl\n…";
+  body.appendChild(ta);
+  const result=el("div");result.id="menu-imp-result";body.appendChild(result);
+  const sv=ov.querySelector(".ed-save");sv.textContent="Import these items";
+  sv.onclick=()=>{
+    const names=parseMenuText(ta.value);
+    if(!names.length){$("#menu-imp-result").innerHTML='<div class="note" style="color:var(--ember1)">No item names found — paste one name per line.</div>';return;}
+    const added=importMenu(names);
+    closeEditor(ov);renderMenu();renderSalesEnter();renderOrder();
+    toast(added?"Imported "+added+" item"+(added>1?"s":""):"Those items were already in the menu");
+  };
+};
+function parseMenuText(text){
+  const skip=/^(item|name|product|description|menu|category|total|subtotal|qty|quantity|price|amount|count)\b/i;
+  const out=[],seen=new Set();
+  (text||"").split(/\r?\n/).forEach(line=>{
+    let s=line.trim();if(!s)return;
+    // take the part before the first comma or tab (handles CSV / report exports)
+    s=s.split(/[,\t]/)[0].trim().replace(/^["']|["']$/g,"").trim();
+    if(!s||skip.test(s))return;
+    if(/^[\d.$%\-\s]+$/.test(s))return;          // pure numbers/prices
+    const k=s.toLowerCase();if(seen.has(k))return;seen.add(k);
+    out.push(s);
+  });
+  return out;
+}
+$("#add-inv").onclick=()=>invEditor(null);
+$("#import-inv").onclick=()=>openItemImport();
+$("#sales-sync").onclick=()=>syncFromAloha(true);
+$("#scan-inv").onclick=()=>openScanner(code=>{
+  const found=S.ingredients.find(x=>x.barcode&&String(x.barcode)===String(code));
+  if(found){toast("Found: "+found.name);invEditor(found.id);}
+  else invEditor(null,{barcode:code,lookup:true});
+});
+document.querySelectorAll("[data-salesmode]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-salesmode]").forEach(x=>x.classList.toggle("active",x===b));
+  const imp=b.dataset.salesmode==="import";
+  $("#sales-import").style.display=imp?"block":"none";
+  $("#sales-enter").style.display=imp?"none":"block";
+  if(imp)renderSalesImport();
+});
+
+let toastTimer;
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1900);}
+
+/* ---------- Theme ---------- */
+function currentTheme(){return document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";}
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  const tt=$("#theme-toggle");if(tt)tt.setAttribute("aria-checked",String(t==="dark"));
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==="light"?"#F7F5F3":"#141416";
+}
+function initTheme(){
+  let t=null;try{t=localStorage.getItem("ember_theme");}catch(e){}
+  if(!t)t=(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+  applyTheme(t);
+}
+$("#theme-toggle").onclick=()=>{
+  const next=currentTheme()==="light"?"dark":"light";
+  applyTheme(next);try{localStorage.setItem("ember_theme",next);}catch(e){}
+};
+initTheme();
+
+/* ---------- Boot ---------- */
+if(!S){seedSampleFull();toast("Loaded your item catalog");}
+
+/* One-time, non-destructive top-up: makes sure every known catalog item exists
+   in the user's saved data (adds missing ones, keeps their on-hand & edits). */
+const CATALOG_BUILD=3;
+if((S.settings.catalogBuild||0)<CATALOG_BUILD){
+  const r=importItems([...INVOICE_SYSCO,...INVOICE_PFG,...INVOICE_ASIANFRESH]);
+  if(!S.settings.suppliers.includes("Asian Fresh Market"))S.settings.suppliers.push("Asian Fresh Market");
+  if(!S.settings.supplierInfo["Asian Fresh Market"])S.settings.supplierInfo["Asian Fresh Market"]={account:"",url:"",email:"asianfreshsupermarket@gmail.com",cutoff:"Local vendor — email the order"};
+  S.settings.catalogBuild=CATALOG_BUILD;save();
+  if(r.added)setTimeout(()=>toast("Added "+r.added+" item"+(r.added>1?"s":"")+" to your stock"),600);
+}
+renderAll();
+applyRole();
+lock();
+if(S.settings.syncAuto&&S.settings.syncUrl)setTimeout(()=>syncFromAloha(false),400);
+</script>
+</body>
+</html>
