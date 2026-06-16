@@ -1,5 +1,6 @@
 ﻿{
-    "updatedAt":  "2026-06-16T18:41:07.0788515Z",
-    "source":  "SEA GitHub Desktop publisher v2",
-    "liveJson":  "data/sea-live.json"
+    "updatedAt":  "2026-06-16T18:47:38.2964290Z",
+    "source":  "SEA force Pages redeploy",
+    "liveJson":  "data/sea-live.json",
+    "note":  "If this URL works, GitHub Pages is serving the data folder."
 }
